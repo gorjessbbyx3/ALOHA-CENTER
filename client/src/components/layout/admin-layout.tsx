@@ -45,6 +45,9 @@ export function AdminLayout({
             </div>
           </div>
         </main>
+        
+        {/* Help Button */}
+        <HelpButton />
       </div>
     </div>
   );
