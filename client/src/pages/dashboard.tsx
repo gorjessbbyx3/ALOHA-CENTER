@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/layout/admin-layout";
-import { MeevoCard } from "@/components/dashboard/meevo-card";
+import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { CalendarView } from "@/components/dashboard/calendar-view";
 import { AppointmentList } from "@/components/dashboard/appointment-list";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
@@ -28,18 +28,18 @@ export default function Dashboard() {
   
   return (
     <AdminLayout 
-      title="Welcome to Meevo" 
+      title="Welcome to Your Clinic Dashboard" 
       subtitle="Manage your clinic operations all in one place"
       onNewAppointment={() => setIsAppointmentFormOpen(true)}
       onExport={handleExport}
     >
-      {/* Meevo Dashboard Cards Grid */}
+      {/* Dashboard Cards Grid */}
       <div className="py-2">
         <h2 className="text-gray-500 mb-4">Welcome back, Dr. Sarah Chen</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {/* First Row */}
-          <MeevoCard
+          <DashboardCard
             title="Appointment Book"
             value=""
             icon={<Clock size={48}/>}
@@ -64,7 +64,7 @@ export default function Dashboard() {
           {/* Third Row */}
           <StickyNotesTile />
           
-          <MeevoCard
+          <DashboardCard
             title="Time Clock"
             value=""
             icon={<Clock size={40}/>}

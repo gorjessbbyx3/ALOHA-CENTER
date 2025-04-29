@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-interface MeevoCardProps {
+interface DashboardCardProps {
   title: string;
   value: string | number;
   icon?: ReactNode;
@@ -11,7 +11,7 @@ interface MeevoCardProps {
   onClick?: () => void;
 }
 
-export function MeevoCard({
+export function DashboardCard({
   title,
   value,
   icon,
@@ -19,7 +19,7 @@ export function MeevoCard({
   iconPosition = 'left',
   valueSize = 'large',
   onClick
-}: MeevoCardProps) {
+}: DashboardCardProps) {
   const valueSizeClasses = {
     small: 'text-xl',
     medium: 'text-3xl',
