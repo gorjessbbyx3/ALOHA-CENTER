@@ -39,7 +39,7 @@ export default function Dashboard() {
             icon={<Clock size={48}/>}
             className="bg-primary col-span-1 md:col-span-1 h-44 md:h-48"
             iconPosition="top"
-            onClick={() => setIsAppointmentFormOpen(true)}
+            onClick={() => window.location.href = "/appointments"}
           />
           
           <MeevoCard

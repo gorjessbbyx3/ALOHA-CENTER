@@ -25,46 +25,54 @@ export function Sidebar({ className }: SidebarProps) {
           {/* Top Navigation with colored backgrounds */}
           <div className="px-4 space-y-2 mb-6">
             <div className="flex space-x-1">
-              <Link href="/">
-                <a className={cn(
-                  "flex-1 flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
-                  isActive("/") 
-                    ? "bg-primary text-white" 
-                    : "bg-gray-700 text-white hover:bg-gray-600"
-                )}>
-                  Home
-                </a>
-              </Link>
-              <Link href="/appointments">
-                <a className={cn(
-                  "flex-1 flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
-                  isActive("/appointments") 
-                    ? "bg-primary text-white" 
-                    : "bg-gray-700 text-white hover:bg-gray-600"
-                )}>
-                  Register
-                </a>
-              </Link>
-              <Link href="/services">
-                <a className={cn(
-                  "flex-1 flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
-                  isActive("/services") 
-                    ? "bg-primary text-white" 
-                    : "bg-gray-700 text-white hover:bg-gray-600"
-                )}>
-                  Products
-                </a>
-              </Link>
-              <Link href="/reports">
-                <a className={cn(
-                  "flex-1 flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
-                  isActive("/reports") 
-                    ? "bg-primary text-white" 
-                    : "bg-gray-700 text-white hover:bg-gray-600"
-                )}>
-                  Reports
-                </a>
-              </Link>
+              <div className="flex-1">
+                <Link href="/">
+                  <div className={cn(
+                    "flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
+                    isActive("/") 
+                      ? "bg-primary text-white" 
+                      : "bg-gray-700 text-white hover:bg-gray-600"
+                  )}>
+                    Home
+                  </div>
+                </Link>
+              </div>
+              <div className="flex-1">
+                <Link href="/appointments">
+                  <div className={cn(
+                    "flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
+                    isActive("/appointments") 
+                      ? "bg-primary text-white" 
+                      : "bg-gray-700 text-white hover:bg-gray-600"
+                  )}>
+                    Register
+                  </div>
+                </Link>
+              </div>
+              <div className="flex-1">
+                <Link href="/services">
+                  <div className={cn(
+                    "flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
+                    isActive("/services") 
+                      ? "bg-primary text-white" 
+                      : "bg-gray-700 text-white hover:bg-gray-600"
+                  )}>
+                    Products
+                  </div>
+                </Link>
+              </div>
+              <div className="flex-1">
+                <Link href="/reports">
+                  <div className={cn(
+                    "flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
+                    isActive("/reports") 
+                      ? "bg-primary text-white" 
+                      : "bg-gray-700 text-white hover:bg-gray-600"
+                  )}>
+                    Reports
+                  </div>
+                </Link>
+              </div>
             </div>
           </div>
           
