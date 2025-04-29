@@ -280,13 +280,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Make sure appointmentId and patientId exist
+      const appointment = await storage.getAppointment(appointmentId);
+      if (!appointment) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+      
+      const patient = await storage.getPatient(patientId);
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+      
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(parseFloat(amount) * 100), // Convert to cents
+        amount, // Amount should already be in cents from the client
         currency: "usd",
         metadata: {
           appointmentId: appointmentId.toString(),
           patientId: patientId.toString(),
+          patientName: patient.name
         },
+        description: `Payment for appointment #${appointmentId} - ${patient.name}`,
+      });
+      
+      // Log the payment intent creation
+      await storage.createActivity({
+        type: "payment_intent_created",
+        details: `Created payment intent for $${(amount / 100).toFixed(2)} - Appointment #${appointmentId}`,
+        entityId: appointmentId,
+        entityType: "appointment"
       });
       
       res.json({ clientSecret: paymentIntent.client_secret });
