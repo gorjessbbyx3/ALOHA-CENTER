@@ -7,6 +7,8 @@ import { AppointmentList } from "@/components/dashboard/appointment-list";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { PosTile } from "@/components/pos/pos-tile";
+import { MenuTile } from "@/components/menu/menu-tile";
+import { ManageTile } from "@/components/manage/manage-tile";
 import { Clock, Users, Package2 } from "lucide-react";
 
 export default function Dashboard() {
@@ -43,22 +45,12 @@ export default function Dashboard() {
             onClick={() => window.location.href = "/appointments"}
           />
           
-          <MeevoCard
-            title="My Requested Appts"
-            value="3"
-            className="bg-secondary col-span-1 h-44 md:h-48"
-            valueSize="large"
-          />
+          <ManageTile />
           
           {/* POS Tile - takes up 2 columns in md/lg screens */}
           <PosTile />
           
-          <MeevoCard
-            title="Gross Service Sales Today"
-            value="$850"
-            className="bg-primary col-span-1 h-44 md:h-48"
-            valueSize="large"
-          />
+          <MenuTile />
           
           {/* Second Row */}
           <MeevoCard
