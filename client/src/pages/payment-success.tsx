@@ -1,111 +1,101 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useLocation } from 'wouter';
-import { Loader2, Check, AlertCircle } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { apiRequest } from '@/lib/queryClient';
+import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function PaymentSuccess() {
-  const [, setLocation] = useLocation();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Check the status of the payment
-    const query = new URLSearchParams(window.location.search);
-    const paymentIntent = query.get('payment_intent');
-    const paymentIntentClientSecret = query.get('payment_intent_client_secret');
-    const redirectStatus = query.get('redirect_status');
+    // Extract the payment_intent parameter from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentIntentId = urlParams.get('payment_intent');
+    const redirectStatus = urlParams.get('redirect_status');
 
-    setPaymentIntentId(paymentIntent);
-
-    if (redirectStatus === 'succeeded' && paymentIntent && paymentIntentClientSecret) {
-      // Record the payment in our system
-      apiRequest('POST', '/api/record-payment', {
-        paymentIntentId: paymentIntent,
-        status: 'completed'
-      })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Failed to record payment');
-          }
-          return response.json();
-        })
-        .then(() => {
-          setStatus('success');
-        })
-        .catch(error => {
-          console.error('Error recording payment:', error);
-          toast({
-            title: 'Payment Recorded',
-            description: 'Payment was successful, but we had trouble updating our records. Please contact support.',
-            variant: 'destructive',
-          });
-          setStatus('error');
-        });
-    } else if (redirectStatus === 'failed') {
-      setStatus('error');
-    } else {
-      // Unexpected state
-      setStatus('error');
+    if (!paymentIntentId) {
+      setError('Payment information not found');
+      setIsLoading(false);
+      return;
     }
+
+    const processPayment = async () => {
+      try {
+        const res = await apiRequest('POST', '/api/record-payment', {
+          paymentIntentId,
+          status: redirectStatus || 'completed'
+        });
+        
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'Failed to record payment');
+        }
+        
+        const data = await res.json();
+        
+        // Success!
+        setIsSuccess(true);
+        toast({
+          title: 'Payment Recorded',
+          description: 'Your payment has been successfully processed',
+        });
+      } catch (err: any) {
+        console.error('Payment recording error:', err);
+        setError(err.message || 'Failed to record payment');
+        toast({
+          title: 'Payment Error',
+          description: err.message || 'There was a problem recording your payment',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    processPayment();
   }, [toast]);
 
-  if (status === 'loading') {
+  if (isLoading) {
     return (
-      <div className="max-w-md mx-auto mt-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Processing payment</CardTitle>
-            <CardDescription>
-              Please wait while we confirm your payment...
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center py-10">
-            <Loader2 className="h-16 w-16 text-primary animate-spin mb-4" />
-            <p className="text-muted-foreground">Verifying transaction</p>
-          </CardContent>
-        </Card>
+      <div className="h-[70vh] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-primary" />
+          <h2 className="text-xl font-semibold mb-2">Processing Payment</h2>
+          <p className="text-muted-foreground">Please wait while we process your payment...</p>
+        </div>
       </div>
     );
   }
 
-  if (status === 'error') {
+  if (error) {
     return (
       <div className="max-w-md mx-auto mt-10">
         <Card className="border-red-200">
           <CardHeader>
-            <CardTitle className="flex items-center text-red-600">
-              <AlertCircle className="mr-2 h-5 w-5" />
-              Payment Unsuccessful
-            </CardTitle>
-            <CardDescription>
-              We encountered an issue with your payment
-            </CardDescription>
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-6 w-6 text-red-500" />
+              <CardTitle>Payment Failed</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="mb-4">Your payment could not be processed. Please try again or contact support if the problem persists.</p>
-            <p className="text-sm text-muted-foreground">
-              {paymentIntentId && (
-                <span className="block mt-2">Payment Reference: {paymentIntentId}</span>
-              )}
+            <p>{error}</p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              The payment was processed by Stripe, but we encountered an issue recording it in our system.
+              Please contact customer support for assistance.
             </p>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
-            <Button 
-              onClick={() => window.history.back()} 
-              className="w-full"
-              variant="outline"
-            >
-              Try Again
+          <CardFooter className="flex justify-between">
+            <Button onClick={() => setLocation('/payments')} variant="outline">
+              View All Payments
             </Button>
-            <Button 
-              onClick={() => setLocation('/dashboard')}
-              className="w-full"
-            >
-              Return to Dashboard
+            <Button onClick={() => window.location.reload()}>
+              Try Again
             </Button>
           </CardFooter>
         </Card>
@@ -117,28 +107,20 @@ export default function PaymentSuccess() {
     <div className="max-w-md mx-auto mt-10">
       <Card className="border-green-200">
         <CardHeader>
-          <CardTitle className="flex items-center text-green-600">
-            <Check className="mr-2 h-5 w-5" />
-            Payment Successful
-          </CardTitle>
-          <CardDescription>
-            Thank you for your payment
-          </CardDescription>
+          <div className="flex items-center space-x-2">
+            <CheckCircle2 className="h-6 w-6 text-green-500" />
+            <CardTitle>Payment Successful!</CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
-          <p className="mb-4">Your payment has been processed successfully.</p>
-          <p className="text-sm text-muted-foreground">
-            {paymentIntentId && (
-              <span className="block mt-2">Payment Reference: {paymentIntentId}</span>
-            )}
+          <p>Your payment has been successfully processed and recorded.</p>
+          <p className="mt-4 text-sm text-muted-foreground">
+            A receipt has been sent to your email address on file.
           </p>
         </CardContent>
-        <CardFooter>
-          <Button 
-            onClick={() => setLocation('/dashboard')}
-            className="w-full"
-          >
-            Return to Dashboard
+        <CardFooter className="flex justify-end">
+          <Button onClick={() => setLocation('/payments')}>
+            Return to Payments
           </Button>
         </CardFooter>
       </Card>

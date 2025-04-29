@@ -55,6 +55,16 @@ export default function Payments() {
     return patient ? patient.name : "Unknown Patient";
   };
   
+  // Helper for formatting dates safely
+  const formatDate = (date: string | Date | null, formatStr: string = "MMM d, yyyy") => {
+    if (!date) return "N/A";
+    try {
+      return format(new Date(date), formatStr);
+    } catch (e) {
+      return "Invalid date";
+    }
+  };
+  
   // Analytics data preparation
   const getWeeklyPaymentData = () => {
     const today = new Date();
@@ -237,7 +247,7 @@ export default function Payments() {
                           <td className="py-3 px-4 font-medium">{getPatientName(payment.patientId)}</td>
                           <td className="py-3 px-4 font-medium">${Number(payment.amount).toFixed(2)}</td>
                           <td className="py-3 px-4 text-sm capitalize">{payment.paymentMethod}</td>
-                          <td className="py-3 px-4 text-sm">{payment.date ? format(new Date(payment.date), "MMM d, yyyy") : "N/A"}</td>
+                          <td className="py-3 px-4 text-sm">{formatDate(payment.date)}</td>
                           <td className="py-3 px-4">
                             <Badge 
                               className={cn(
@@ -277,7 +287,7 @@ export default function Payments() {
                         <div>
                           <p className="font-medium">{getPatientName(payment.patientId)}</p>
                           <p className="text-sm text-gray-500">
-                            ${Number(payment.amount).toFixed(2)} • {format(new Date(payment.date), "MMM d, yyyy")}
+                            ${Number(payment.amount).toFixed(2)} • {formatDate(payment.date)}
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -307,7 +317,7 @@ export default function Payments() {
                         <div>
                           <p className="font-medium">{getPatientName(payment.patientId)}</p>
                           <p className="text-sm text-gray-500">
-                            ${Number(payment.amount).toFixed(2)} • {format(new Date(payment.date), "MMM d, yyyy")}
+                            ${Number(payment.amount).toFixed(2)} • {formatDate(payment.date)}
                           </p>
                         </div>
                         <Button variant="ghost" size="sm" onClick={() => handleViewPayment(payment.id)}>
@@ -350,7 +360,7 @@ export default function Payments() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Date</p>
-                  <p className="text-sm text-gray-900">{format(new Date(selectedPayment.date), "MMMM d, yyyy")}</p>
+                  <p className="text-sm text-gray-900">{formatDate(selectedPayment.date, "MMMM d, yyyy")}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Status</p>
@@ -433,7 +443,7 @@ export default function Payments() {
             
             <div className="space-y-2">
               <Label>Patient</Label>
-              <p className="text-sm text-gray-700">{getPatientName(selectedPatientId || 0)}</p>
+              <p className="text-sm text-gray-700">{getPatientName(selectedPatientId)}</p>
             </div>
           </div>
           
