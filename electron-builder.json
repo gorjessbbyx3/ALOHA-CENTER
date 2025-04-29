@@ -1,0 +1,26 @@
+{
+  "appId": "com.clinic.management",
+  "productName": "Clinic Management System",
+  "files": [
+    "dist/**/*",
+    "electron.js",
+    "preload.js",
+    "package.json"
+  ],
+  "directories": {
+    "buildResources": "resources",
+    "output": "release"
+  },
+  "win": {
+    "target": ["nsis"],
+    "icon": "resources/icon.ico"
+  },
+  "mac": {
+    "target": ["dmg"],
+    "icon": "resources/icon.icns"
+  },
+  "linux": {
+    "target": ["AppImage"],
+    "icon": "resources/icon.png"
+  }
+}
