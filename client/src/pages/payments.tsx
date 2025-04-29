@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CreditCard } from "lucide-react";
 import { 
   BarChart, 
   Bar, 
@@ -25,6 +28,10 @@ import {
 
 export default function Payments() {
   const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("50.00"); // Default amount
+  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null);
   
   // Fetch payments
   const { data: payments = [], isLoading } = useQuery({
@@ -42,7 +49,8 @@ export default function Payments() {
   const selectedPayment = payments.find(p => p.id === selectedPaymentId);
   
   // Get patient for a payment
-  const getPatientName = (patientId: number) => {
+  const getPatientName = (patientId: number | null) => {
+    if (!patientId) return "Unknown Patient";
     const patient = patients.find(p => p.id === patientId);
     return patient ? patient.name : "Unknown Patient";
   };
@@ -57,9 +65,11 @@ export default function Payments() {
     
     // Populate from actual data
     payments.forEach(payment => {
-      const paymentDate = new Date(payment.date);
-      const dayIndex = paymentDate.getDay();
-      weeklyData[dayIndex].amount += Number(payment.amount);
+      if (payment.date) {
+        const paymentDate = new Date(payment.date);
+        const dayIndex = paymentDate.getDay();
+        weeklyData[dayIndex].amount += Number(payment.amount);
+      }
     });
     
     return weeklyData;
@@ -84,6 +94,43 @@ export default function Payments() {
   
   const handleClosePaymentDetails = () => {
     setSelectedPaymentId(null);
+  };
+  
+  const handleOpenPaymentForm = () => {
+    setShowPaymentForm(true);
+  };
+  
+  const handleClosePaymentForm = () => {
+    setShowPaymentForm(false);
+  };
+  
+  const handleProcessPayment = () => {
+    // Create a test patient and appointment if none exist
+    if (patients.length === 0) {
+      alert("Please create a patient first before processing a payment.");
+      return;
+    }
+    
+    // Use the first patient and appointment as an example
+    const testPatientId = patients[0]?.id || 1;
+    const testAppointmentId = 1; // Example appointment ID
+    
+    setSelectedPatientId(testPatientId);
+    setSelectedAppointmentId(testAppointmentId);
+    handleOpenPaymentForm();
+  };
+  
+  const handleStripeCheckout = () => {
+    if (!selectedPatientId || !selectedAppointmentId) {
+      alert("Missing patient or appointment information.");
+      return;
+    }
+    
+    // Convert dollars to cents for Stripe
+    const amountInCents = Math.round(parseFloat(paymentAmount) * 100);
+    
+    // Redirect to checkout page with query parameters
+    window.location.href = `/checkout?amount=${amountInCents}&patientId=${selectedPatientId}&appointmentId=${selectedAppointmentId}`;
   };
   
   return (
@@ -190,7 +237,7 @@ export default function Payments() {
                           <td className="py-3 px-4 font-medium">{getPatientName(payment.patientId)}</td>
                           <td className="py-3 px-4 font-medium">${Number(payment.amount).toFixed(2)}</td>
                           <td className="py-3 px-4 text-sm capitalize">{payment.paymentMethod}</td>
-                          <td className="py-3 px-4 text-sm">{format(new Date(payment.date), "MMM d, yyyy")}</td>
+                          <td className="py-3 px-4 text-sm">{payment.date ? format(new Date(payment.date), "MMM d, yyyy") : "N/A"}</td>
                           <td className="py-3 px-4">
                             <Badge 
                               className={cn(
@@ -348,6 +395,57 @@ export default function Payments() {
           </DialogContent>
         </Dialog>
       )}
+      
+      {/* Add "Process Payment" Button */}
+      <div className="fixed bottom-8 right-8">
+        <Button 
+          size="lg" 
+          className="shadow-lg"
+          onClick={handleProcessPayment}
+        >
+          <CreditCard className="w-5 h-5 mr-2" />
+          Process Payment
+        </Button>
+      </div>
+      
+      {/* Payment Form Dialog */}
+      <Dialog open={showPaymentForm} onOpenChange={handleClosePaymentForm}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Process Payment with Stripe</DialogTitle>
+            <DialogDescription>
+              Enter payment details to proceed to Stripe checkout.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="amount">Payment Amount ($)</Label>
+              <Input
+                id="amount"
+                type="number" 
+                step="0.01"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                placeholder="Enter amount"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Patient</Label>
+              <p className="text-sm text-gray-700">{getPatientName(selectedPatientId || 0)}</p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClosePaymentForm}>Cancel</Button>
+            <Button onClick={handleStripeCheckout}>
+              <CreditCard className="w-4 h-4 mr-2" />
+              Proceed to Checkout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

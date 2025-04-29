@@ -22,6 +22,7 @@ function Router() {
       <Route path="/payments" component={Payments} />
       <Route path="/settings" component={Settings} />
       <Route path="/checkout/:appointmentId?" component={Checkout} />
+      <Route path="/payment-success" component={PaymentSuccess} />
       <Route component={NotFound} />
     </Switch>
   );
