@@ -14,7 +14,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16",
+      apiVersion: "2023-10-16" as any, // Type casting to any to avoid version mismatch errors
     })
   : null;
 
@@ -191,9 +191,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send email confirmation if patient has email
       try {
-        const patient = await storage.getPatient(appointment.patientId);
-        if (patient && patient.email) {
-          await sendAppointmentConfirmation(patient.email, patient.name, appointment);
+        if (appointment.patientId) {
+          const patient = await storage.getPatient(appointment.patientId);
+          if (patient && patient.email) {
+            await sendAppointmentConfirmation(patient.email, patient.name, appointment);
+          }
         }
       } catch (emailError) {
         console.error("Failed to send email confirmation:", emailError);
@@ -305,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log the payment intent creation
       await storage.createActivity({
         type: "payment_intent_created",
-        details: `Created payment intent for $${(amount / 100).toFixed(2)} - Appointment #${appointmentId}`,
+        description: `Created payment intent for $${(amount / 100).toFixed(2)} - Appointment #${appointmentId}`,
         entityId: appointmentId,
         entityType: "appointment"
       });
@@ -327,9 +329,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send payment receipt if patient has email
       try {
-        const patient = await storage.getPatient(payment.patientId);
-        if (patient && patient.email) {
-          await sendPaymentReceipt(patient.email, patient.name, payment);
+        if (payment.patientId) {
+          const patient = await storage.getPatient(payment.patientId);
+          if (patient && patient.email) {
+            await sendPaymentReceipt(patient.email, patient.name, payment);
+          }
         }
       } catch (emailError) {
         console.error("Failed to send payment receipt:", emailError);
@@ -347,6 +351,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Handle Stripe payment success/confirmation
+  app.post("/api/record-payment", async (req, res) => {
+    if (!stripe) {
+      return res.status(500).json({ message: "Stripe is not configured" });
+    }
+    
+    try {
+      const { paymentIntentId, status } = req.body;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: "Missing payment intent ID" });
+      }
+      
+      // Retrieve the payment intent from Stripe to verify
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (!paymentIntent || !paymentIntent.metadata.appointmentId || !paymentIntent.metadata.patientId) {
+        return res.status(400).json({ message: "Invalid payment intent or missing metadata" });
+      }
+      
+      const appointmentId = parseInt(paymentIntent.metadata.appointmentId);
+      const patientId = parseInt(paymentIntent.metadata.patientId);
+      
+      // Create a payment record in our system
+      const payment = await storage.createPayment({
+        appointmentId,
+        patientId,
+        amount: (paymentIntent.amount / 100).toString(), // Convert cents to dollars
+        paymentMethod: "credit_card",
+        status: status || "completed",
+        transactionId: paymentIntentId,
+        stripePaymentIntentId: paymentIntentId
+      });
+      
+      // Log the activity
+      await storage.createActivity({
+        type: "payment_received",
+        description: `Payment of $${(paymentIntent.amount / 100).toFixed(2)} received for Appointment #${appointmentId}`,
+        entityId: appointmentId,
+        entityType: "appointment"
+      });
+      
+      // If we have a patient email, send a receipt
+      try {
+        const patient = await storage.getPatient(patientId);
+        if (patient && patient.email) {
+          await sendPaymentReceipt(patient.email, patient.name, payment);
+        }
+      } catch (emailError) {
+        console.error("Failed to send payment receipt:", emailError);
+      }
+      
+      res.status(200).json({ success: true, payment });
+    } catch (error: any) {
+      console.error("Error recording payment:", error);
+      res.status(500).json({ 
+        message: "Error recording payment", 
+        error: error.message 
+      });
+    }
+  });
+
   // Get recent activities
   app.get("/api/activities", async (req, res) => {
     try {

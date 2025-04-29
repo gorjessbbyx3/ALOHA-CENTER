@@ -10,6 +10,7 @@ import Patients from "@/pages/patients";
 import Payments from "@/pages/payments";
 import Settings from "@/pages/settings";
 import Checkout from "@/pages/checkout";
+import PaymentSuccess from "@/pages/payment-success";
 import NotFound from "@/pages/not-found";
 
 function Router() {
