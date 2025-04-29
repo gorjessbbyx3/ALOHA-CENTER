@@ -3,9 +3,10 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import nodemailer from "nodemailer";
-import { appointments, insertAppointmentSchema, insertPatientSchema, insertPaymentSchema } from "@shared/schema";
+import { appointments, insertAppointmentSchema, insertPatientSchema, insertPaymentSchema, services, users } from "@shared/schema";
 import { z } from "zod";
 import { sendAppointmentConfirmation, sendPaymentReceipt } from "./email";
+import { db } from "./db";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('Missing STRIPE_SECRET_KEY environment variable. Payment processing will not work correctly.');
@@ -17,7 +18,48 @@ const stripe = process.env.STRIPE_SECRET_KEY
     })
   : null;
 
+// Function to seed initial data
+async function seedInitialData() {
+  console.log("Checking if initial data needs to be seeded...");
+  
+  // Check if we have any services
+  const existingServices = await db.select().from(services);
+  
+  if (existingServices.length === 0) {
+    console.log("Seeding initial services data...");
+    
+    // Seed services
+    await db.insert(services).values([
+      { name: "General Consultation", description: "Regular checkup", duration: 30, price: "50" },
+      { name: "Follow-up Visit", description: "Follow-up appointment", duration: 15, price: "30" },
+      { name: "Physical Examination", description: "Complete physical", duration: 60, price: "120" },
+      { name: "Vaccination", description: "Various vaccines", duration: 15, price: "40" },
+      { name: "Lab Work", description: "Blood work and tests", duration: 30, price: "80" }
+    ]);
+  }
+  
+  // Check if we have admin user
+  const existingUsers = await db.select().from(users);
+  
+  if (existingUsers.length === 0) {
+    console.log("Seeding initial admin user...");
+    
+    // Create admin user
+    await db.insert(users).values({
+      username: "admin",
+      password: "password123", // In a real app, this would be hashed
+      email: "admin@medibook.com",
+      name: "Dr. Sarah Chen",
+      role: "admin"
+    });
+  }
+  
+  console.log("Initial data seeding complete");
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Seed initial data
+  await seedInitialData();
   // Dashboard stats
   app.get("/api/stats", async (req, res) => {
     try {
