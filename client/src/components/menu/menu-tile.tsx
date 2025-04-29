@@ -38,10 +38,25 @@ export const MenuTile = () => {
     service.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  // Group services by category (if category exists, otherwise use 'General')
+  // Group services by type (we'll use a simple approach here since category isn't in the schema)
   const groupedServices: Record<string, Service[]> = {};
+  
+  // Helper function to guess a category from the service name or set a default
+  const getCategoryFromService = (service: Service): string => {
+    const name = service.name.toLowerCase();
+    if (name.includes('consult') || name.includes('exam')) return 'Consultations';
+    if (name.includes('therapy') || name.includes('treatment')) return 'Treatments';
+    if (name.includes('massage')) return 'Massage';
+    if (name.includes('facial')) return 'Facials';
+    // Default category based on price range
+    const price = parseFloat(service.price);
+    if (price < 50) return 'Basic Services';
+    if (price >= 100) return 'Premium Services';
+    return 'General Services';
+  };
+  
   filteredServices.forEach((service) => {
-    const category = service.category || 'General';
+    const category = getCategoryFromService(service);
     if (!groupedServices[category]) {
       groupedServices[category] = [];
     }

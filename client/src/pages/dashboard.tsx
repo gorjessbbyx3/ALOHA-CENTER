@@ -62,12 +62,7 @@ export default function Dashboard() {
           <AnalyticsTile />
           
           {/* Third Row */}
-          <MeevoCard
-            title="My Hours Available Today"
-            value="1.5"
-            className="bg-primary col-span-1 h-36"
-            valueSize="large"
-          />
+          <StickyNotesTile />
           
           <MeevoCard
             title="Time Clock"
