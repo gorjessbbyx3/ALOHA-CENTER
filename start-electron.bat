@@ -12,8 +12,11 @@ if %ERRORLEVEL% neq 0 (
   exit /b 1
 )
 
-REM Start the server and Electron app
+REM Set DB_TYPE to aws-rds to use AWS RDS database
+set DB_TYPE=aws-rds
+
+REM Start the server and Electron app with environment variables
 echo Starting server and launching application...
-npx concurrently "npm run dev" "npx wait-on http://localhost:5000 && npx electron ."
+node electron-start.js
 
 pause

@@ -37,7 +37,8 @@ function createWindow() {
       contextIsolation: false, // Required for direct access to Node.js APIs
       preload: path.join(__dirname, 'preload.js')
     },
-    icon: path.join(__dirname, 'client/public/favicon.ico')
+    icon: path.join(__dirname, 'resources/icon.png'),
+    title: 'Clinic Management System'
   });
 
   // Load the app

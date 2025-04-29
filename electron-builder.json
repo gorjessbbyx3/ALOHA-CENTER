@@ -13,11 +13,11 @@
   },
   "win": {
     "target": ["nsis"],
-    "icon": "resources/icon.ico"
+    "icon": "resources/icon.png"
   },
   "mac": {
     "target": ["dmg"],
-    "icon": "resources/icon.icns"
+    "icon": "resources/icon.png"
   },
   "linux": {
     "target": ["AppImage"],
