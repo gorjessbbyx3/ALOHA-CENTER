@@ -27,10 +27,17 @@ export interface IStorage {
   getServices(): Promise<Service[]>;
   createService(service: InsertService): Promise<Service>;
   
+  // Room operations
+  getRoom(id: number): Promise<Room | undefined>;
+  getRooms(active?: boolean): Promise<Room[]>;
+  createRoom(room: InsertRoom): Promise<Room>;
+  updateRoom(id: number, data: Partial<InsertRoom>): Promise<Room>;
+  
   // Appointment operations
   getAppointment(id: number): Promise<Appointment | undefined>;
   getAppointmentsByPatient(patientId: number): Promise<Appointment[]>;
   getAppointmentsByDate(date: Date): Promise<Appointment[]>;
+  getAppointmentsByRoom(roomId: number, date?: Date): Promise<Appointment[]>;
   getAppointmentsForToday(): Promise<Appointment[]>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointment(id: number, data: Partial<InsertAppointment>): Promise<Appointment>;

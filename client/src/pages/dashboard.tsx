@@ -6,6 +6,7 @@ import { CalendarView } from "@/components/dashboard/calendar-view";
 import { AppointmentList } from "@/components/dashboard/appointment-list";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { AppointmentForm } from "@/components/appointments/appointment-form";
+import { PosTile } from "@/components/pos/pos-tile";
 import { Clock, Users, Package2 } from "lucide-react";
 
 export default function Dashboard() {

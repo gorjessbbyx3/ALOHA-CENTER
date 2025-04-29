@@ -64,11 +64,28 @@ export const insertServiceSchema = createInsertSchema(services).pick({
   price: true,
 });
 
+// Room schema
+export const rooms = pgTable("rooms", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  capacity: integer("capacity").default(1),
+  isActive: boolean("is_active").default(true),
+});
+
+export const insertRoomSchema = createInsertSchema(rooms).pick({
+  name: true,
+  description: true,
+  capacity: true,
+  isActive: true,
+});
+
 // Appointment schema
 export const appointments = pgTable("appointments", {
   id: serial("id").primaryKey(),
   patientId: integer("patient_id").references(() => patients.id),
   serviceId: integer("service_id").references(() => services.id),
+  roomId: integer("room_id").references(() => rooms.id),
   date: timestamp("date").notNull(),
   time: text("time").notNull(),
   duration: integer("duration").notNull(), // in minutes
@@ -83,6 +100,7 @@ export const appointments = pgTable("appointments", {
 export const insertAppointmentSchema = createInsertSchema(appointments).pick({
   patientId: true,
   serviceId: true,
+  roomId: true,
   date: true,
   time: true,
   duration: true,
@@ -144,6 +162,9 @@ export type Patient = typeof patients.$inferSelect;
 
 export type InsertService = z.infer<typeof insertServiceSchema>;
 export type Service = typeof services.$inferSelect;
+
+export type InsertRoom = z.infer<typeof insertRoomSchema>;
+export type Room = typeof rooms.$inferSelect;
 
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
