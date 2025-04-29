@@ -29,14 +29,14 @@ export default function Dashboard() {
   
   return (
     <AdminLayout 
-      title="Welcome to Your Clinic Dashboard" 
-      subtitle="Manage your clinic operations all in one place"
+      title="Aloha Healing Center" 
+      subtitle="Welcome to your Admin dashboard"
       onNewAppointment={() => setIsAppointmentFormOpen(true)}
       onExport={handleExport}
     >
       {/* Dashboard Cards Grid */}
       <div className="py-2">
-        <h2 className="text-gray-500 mb-4">Welcome back, Dr. Sarah Chen</h2>
+        <h2 className="text-gray-500 mb-4">Welcome to your Admin dashboard</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {/* First Row */}

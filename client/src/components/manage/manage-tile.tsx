@@ -29,8 +29,8 @@ export const ManageTile = () => {
   const { toast } = useToast();
   
   // Welcome text and dashboard options state
-  const [welcomeText, setWelcomeText] = useState("Welcome back, Dr. Sarah Chen");
-  const [dashboardTitle, setDashboardTitle] = useState("Welcome to Your Clinic Dashboard");
+  const [welcomeText, setWelcomeText] = useState("Welcome to your Admin dashboard");
+  const [dashboardTitle, setDashboardTitle] = useState("Aloha Healing Center");
   
   // Dashboard display options
   const [showAppointmentTile, setShowAppointmentTile] = useState(true);

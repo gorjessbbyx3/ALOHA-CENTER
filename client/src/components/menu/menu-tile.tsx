@@ -141,9 +141,13 @@ export const MenuTile = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {Object.entries(groupedServices).map(([category, services]) => (
-                    <React.Fragment key={category}>
-                      <TableRow>
+                  {Object.entries(groupedServices).map(([category, services]) => {
+                    // Use an array to hold all the rows for this category
+                    const rows = [];
+                    
+                    // Add the category header row
+                    rows.push(
+                      <TableRow key={`cat-${category}`}>
                         <TableCell colSpan={3} className="bg-muted/30">
                           <div className="flex items-center">
                             <Tag className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -151,8 +155,12 @@ export const MenuTile = () => {
                           </div>
                         </TableCell>
                       </TableRow>
-                      {services.map((service) => (
-                        <TableRow key={service.id}>
+                    );
+                    
+                    // Add all the service rows
+                    services.forEach(service => {
+                      rows.push(
+                        <TableRow key={`service-${service.id}`}>
                           <TableCell className="flex flex-col">
                             <div className="flex items-center">
                               <Scissors className="h-4 w-4 mr-2 text-blue-600" />
@@ -167,9 +175,11 @@ export const MenuTile = () => {
                           <TableCell>{service.duration} mins</TableCell>
                           <TableCell className="text-right">${parseFloat(service.price).toFixed(2)}</TableCell>
                         </TableRow>
-                      ))}
-                    </React.Fragment>
-                  ))}
+                      );
+                    });
+                    
+                    return rows;
+                  })}
                 </TableBody>
               </Table>
             )}
