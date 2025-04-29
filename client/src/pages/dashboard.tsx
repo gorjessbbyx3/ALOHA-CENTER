@@ -12,6 +12,7 @@ import { ManageTile } from "@/components/manage/manage-tile";
 import { UpcomingAppointmentsTile } from "@/components/appointments/upcoming-appointments-tile";
 import { AnalyticsTile } from "@/components/dashboard/analytics-tile";
 import { StickyNotesTile } from "@/components/notes/sticky-notes-tile";
+import { DateTimeTile } from "@/components/datetime/datetime-tile";
 import { Clock } from "lucide-react";
 
 export default function Dashboard() {
@@ -64,13 +65,8 @@ export default function Dashboard() {
           {/* Third Row */}
           <StickyNotesTile />
           
-          <DashboardCard
-            title="Time Clock"
-            value=""
-            icon={<Clock size={40}/>}
-            className="bg-accent col-span-1 md:col-span-1 h-36"
-            iconPosition="left"
-          />
+          {/* Date & Time Tile */}
+          <DateTimeTile />
         </div>
       </div>
       

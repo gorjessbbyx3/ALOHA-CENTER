@@ -37,6 +37,7 @@ export const ManageTile = () => {
   const [showAnalyticsTile, setShowAnalyticsTile] = useState(true);
   const [showStickyNotes, setShowStickyNotes] = useState(true);
   const [showTimeClockTile, setShowTimeClockTile] = useState(true);
+  const [showDateTimeTile, setShowDateTimeTile] = useState(true);
   
   // Fetch services data
   const { data: services = [] } = useQuery<Service[]>({
@@ -69,7 +70,8 @@ export const ManageTile = () => {
         showUpcomingAppointments,
         showAnalyticsTile,
         showStickyNotes,
-        showTimeClockTile
+        showTimeClockTile,
+        showDateTimeTile
       }));
       
       // We're not closing the dialog in this case to let users continue editing
@@ -462,6 +464,20 @@ export const ManageTile = () => {
                             id="showTimeClockTile" 
                             checked={showTimeClockTile}
                             onCheckedChange={setShowTimeClockTile}
+                          />
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="showDateTimeTile">Date & Time Tile</Label>
+                            <p className="text-xs text-muted-foreground">Displays current date and time.</p>
+                          </div>
+                          <Switch 
+                            id="showDateTimeTile" 
+                            checked={showDateTimeTile}
+                            onCheckedChange={setShowDateTimeTile}
                           />
                         </div>
                       </div>
