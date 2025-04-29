@@ -2,6 +2,7 @@ import {
   users, User, InsertUser,
   patients, Patient, InsertPatient,
   services, Service, InsertService,
+  rooms, Room, InsertRoom,
   appointments, Appointment, InsertAppointment,
   payments, Payment, InsertPayment,
   activities, Activity, InsertActivity

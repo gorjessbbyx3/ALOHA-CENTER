@@ -50,12 +50,8 @@ export default function Dashboard() {
             valueSize="large"
           />
           
-          <MeevoCard
-            title="My Service Avg Time Today"
-            value="2"
-            className="bg-secondary col-span-1 h-44 md:h-48"
-            valueSize="large"
-          />
+          {/* POS Tile - takes up 2 columns in md/lg screens */}
+          <PosTile />
           
           <MeevoCard
             title="Gross Service Sales Today"

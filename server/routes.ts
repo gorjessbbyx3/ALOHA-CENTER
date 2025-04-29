@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import nodemailer from "nodemailer";
-import { appointments, insertAppointmentSchema, insertPatientSchema, insertPaymentSchema, services, users } from "@shared/schema";
+import { appointments, insertAppointmentSchema, insertPatientSchema, insertPaymentSchema, services, users, rooms } from "@shared/schema";
 import { z } from "zod";
 import { sendAppointmentConfirmation, sendPaymentReceipt } from "./email";
 import { db } from "./db";
@@ -58,8 +58,25 @@ async function seedInitialData() {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Seed initial data
-  await seedInitialData();
+  // Seed initial rooms
+  try {
+    const existingRooms = await db.select().from(rooms);
+    
+    if (existingRooms.length === 0) {
+      console.log("Seeding initial rooms data...");
+      
+      // Seed rooms
+      await db.insert(rooms).values([
+        { name: "Room 101", description: "Main treatment room", capacity: 1, isActive: true },
+        { name: "Room 102", description: "Secondary treatment room", capacity: 1, isActive: true },
+        { name: "Room 103", description: "Consultation room", capacity: 2, isActive: true },
+        { name: "Room 104", description: "Deluxe room", capacity: 1, isActive: true },
+      ]);
+    }
+  } catch (error) {
+    console.error("Error seeding rooms:", error);
+  }
+  
   // Dashboard stats
   app.get("/api/stats", async (req, res) => {
     try {
@@ -75,6 +92,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const services = await storage.getServices();
       res.json(services);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Get all rooms
+  app.get("/api/rooms", async (req, res) => {
+    try {
+      const activeOnly = req.query.active === "true";
+      const rooms = await storage.getRooms(activeOnly);
+      res.json(rooms);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
