@@ -104,8 +104,8 @@ export class MemStorage implements IStorage {
   private initializeData() {
     // Create admin user
     const adminUser: InsertUser = {
-      username: "admin",
-      password: "password123", // In a real app, this would be hashed
+      username: "webmaster808",
+      password: "BingoxBango", // In a real app, this would be hashed
       email: "admin@medibook.com",
       name: "Dr. Sarah Chen",
       role: "admin"

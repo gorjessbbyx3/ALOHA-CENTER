@@ -4,12 +4,11 @@ import {
   Settings, Plus, Edit, Trash, 
   ClipboardList, Grid, UserPlus, 
   DoorOpen, Store, CalendarPlus,
-  Palette, Type, LayoutGrid, Eye, EyeOff,
-  Save
+  Palette, Type, LayoutGrid, Eye, EyeOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -19,9 +18,13 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Service, Room } from "@shared/schema";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const ManageTile = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("services");
   const { toast } = useToast();
   
@@ -274,25 +277,317 @@ export const ManageTile = () => {
               {/* Staff Tab */}
               <TabsContent value="staff" className="h-full flex-1 flex flex-col">
                 <div className="flex justify-between mb-4">
-                  <h3 className="text-lg font-medium">Staff Management</h3>
-                  <Button size="sm" onClick={() => handleAction("add-staff")}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Staff
-                  </Button>
-                </div>
-                
-                <div className="flex-1 border rounded-md p-4 flex items-center justify-center">
-                  <div className="text-center">
-                    <UserPlus className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Staff Management</h3>
-                    <p className="text-muted-foreground max-w-md mx-auto mb-4">
-                      Add, edit, and manage staff members, their schedules, and permissions.
-                    </p>
-                    <Button onClick={() => handleAction("setup-staff")}>
-                      Set Up Staff Management
+                  <h3 className="text-lg font-medium">Staff & User Management</h3>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => handleAction("add-staff")}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Staff
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setIsCreateUserOpen(true)}>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Create User
                     </Button>
                   </div>
                 </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <h3 className="text-lg font-medium mb-2">System Users</h3>
+                        <div className="space-y-4 mt-4 text-left">
+                          <div className="flex justify-between items-center p-2 border rounded hover:bg-gray-50">
+                            <div>
+                              <p className="font-medium">webmaster808</p>
+                              <p className="text-sm text-muted-foreground">Dr. Sarah Chen (Admin)</p>
+                            </div>
+                            <Button size="sm" variant="ghost">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center p-2 border rounded hover:bg-gray-50">
+                            <div>
+                              <p className="font-medium">reception</p>
+                              <p className="text-sm text-muted-foreground">Front Desk (Receptionist)</p>
+                            </div>
+                            <Button size="sm" variant="ghost">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center p-2 border rounded hover:bg-gray-50">
+                            <div>
+                              <p className="font-medium">technician1</p>
+                              <p className="text-sm text-muted-foreground">John Smith (Technician)</p>
+                            </div>
+                            <Button size="sm" variant="ghost">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <Button className="mt-4" size="sm" variant="outline" onClick={() => setIsCreateUserOpen(true)}>
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Add New User
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <h3 className="text-lg font-medium mb-2">Staff Management</h3>
+                        <p className="text-muted-foreground mb-4">
+                          Manage staff members, schedules, and availability.
+                        </p>
+                        <div className="flex justify-center">
+                          <Button onClick={() => handleAction("setup-staff")}>
+                            Set Up Staff Management
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                {/* User Permissions Section */}
+                <div className="flex-1">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <h3 className="text-lg font-medium mb-4">User Permissions</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">Appointments</h4>
+                          <div className="space-y-1">
+                            <div className="flex items-center">
+                              <span className="bg-green-100 text-green-800 px-2 py-0.5 text-xs rounded-full mr-2">Admin</span>
+                              <span className="text-sm">Create, Edit, Delete</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 text-xs rounded-full mr-2">Reception</span>
+                              <span className="text-sm">Create, Edit</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="bg-purple-100 text-purple-800 px-2 py-0.5 text-xs rounded-full mr-2">Tech</span>
+                              <span className="text-sm">View only</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">Patients</h4>
+                          <div className="space-y-1">
+                            <div className="flex items-center">
+                              <span className="bg-green-100 text-green-800 px-2 py-0.5 text-xs rounded-full mr-2">Admin</span>
+                              <span className="text-sm">Full Access</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 text-xs rounded-full mr-2">Reception</span>
+                              <span className="text-sm">Create, View, Edit</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="bg-purple-100 text-purple-800 px-2 py-0.5 text-xs rounded-full mr-2">Tech</span>
+                              <span className="text-sm">View Basic Info</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">Billing</h4>
+                          <div className="space-y-1">
+                            <div className="flex items-center">
+                              <span className="bg-green-100 text-green-800 px-2 py-0.5 text-xs rounded-full mr-2">Admin</span>
+                              <span className="text-sm">Full Access</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 text-xs rounded-full mr-2">Reception</span>
+                              <span className="text-sm">Process Payments</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="bg-purple-100 text-purple-800 px-2 py-0.5 text-xs rounded-full mr-2">Tech</span>
+                              <span className="text-sm">No Access</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Button className="mt-4" variant="outline" onClick={() => handleAction("manage-permissions")}>
+                        Manage Role Permissions
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                {/* Create User Dialog */}
+                <Dialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen}>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Create New User</DialogTitle>
+                      <DialogDescription>
+                        Add a new user to the system with specific permissions.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="username" className="text-right">
+                          Username
+                        </Label>
+                        <Input
+                          id="username"
+                          placeholder="Enter username"
+                          className="col-span-3"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right">
+                          Full Name
+                        </Label>
+                        <Input
+                          id="name"
+                          placeholder="Enter full name"
+                          className="col-span-3"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="email" className="text-right">
+                          Email
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="Enter email address"
+                          className="col-span-3"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="password" className="text-right">
+                          Password
+                        </Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          placeholder="Set password"
+                          className="col-span-3"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="role" className="text-right">
+                          Role
+                        </Label>
+                        <div className="col-span-3">
+                          <select 
+                            id="role"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Select a role</option>
+                            <option value="admin">Administrator</option>
+                            <option value="doctor">Doctor/Provider</option>
+                            <option value="receptionist">Receptionist</option>
+                            <option value="technician">Technician</option>
+                            <option value="billing">Billing Staff</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3 mt-2">
+                        <h4 className="text-sm font-medium">Permissions</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="checkbox" 
+                              id="perm-appointments"
+                              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label
+                              htmlFor="perm-appointments"
+                              className="text-sm font-medium leading-none"
+                            >
+                              Manage Appointments
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="checkbox" 
+                              id="perm-patients"
+                              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label
+                              htmlFor="perm-patients"
+                              className="text-sm font-medium leading-none"
+                            >
+                              Manage Patients
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="checkbox" 
+                              id="perm-billing"
+                              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label
+                              htmlFor="perm-billing"
+                              className="text-sm font-medium leading-none"
+                            >
+                              Access Billing
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="checkbox" 
+                              id="perm-reports"
+                              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label
+                              htmlFor="perm-reports"
+                              className="text-sm font-medium leading-none"
+                            >
+                              View Reports
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="checkbox" 
+                              id="perm-services"
+                              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label
+                              htmlFor="perm-services"
+                              className="text-sm font-medium leading-none"
+                            >
+                              Manage Services
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="checkbox" 
+                              id="perm-system"
+                              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label
+                              htmlFor="perm-system"
+                              className="text-sm font-medium leading-none"
+                            >
+                              System Settings
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => setIsCreateUserOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" onClick={() => {
+                        toast({
+                          title: "User created",
+                          description: "New user has been added to the system.",
+                        });
+                        setIsCreateUserOpen(false);
+                      }}>
+                        Create User
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </TabsContent>
               
               {/* Schedule Tab */}
