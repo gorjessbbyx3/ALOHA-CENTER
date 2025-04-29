@@ -153,7 +153,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/appointments", async (req, res) => {
     try {
       const date = req.query.date ? new Date(req.query.date as string) : new Date();
-      const appointments = await storage.getAppointmentsByDate(date);
+      const roomId = req.query.roomId ? parseInt(req.query.roomId as string) : undefined;
+      
+      let appointments;
+      
+      if (roomId) {
+        appointments = await storage.getAppointmentsByRoom(roomId, date);
+      } else {
+        appointments = await storage.getAppointmentsByDate(date);
+      }
+      
       res.json(appointments);
     } catch (error: any) {
       res.status(500).json({ message: error.message });

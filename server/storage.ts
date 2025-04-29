@@ -511,6 +511,41 @@ export class DatabaseStorage implements IStorage {
     return service;
   }
   
+  // Room operations
+  async getRoom(id: number): Promise<Room | undefined> {
+    const [room] = await db.select().from(rooms).where(eq(rooms.id, id));
+    return room;
+  }
+  
+  async getRooms(active?: boolean): Promise<Room[]> {
+    if (active) {
+      return await db.select().from(rooms).where(eq(rooms.isActive, true));
+    }
+    return await db.select().from(rooms);
+  }
+  
+  async createRoom(insertRoom: InsertRoom): Promise<Room> {
+    const [room] = await db
+      .insert(rooms)
+      .values(insertRoom)
+      .returning();
+    return room;
+  }
+  
+  async updateRoom(id: number, data: Partial<InsertRoom>): Promise<Room> {
+    const [room] = await db
+      .update(rooms)
+      .set(data)
+      .where(eq(rooms.id, id))
+      .returning();
+    
+    if (!room) {
+      throw new Error(`Room with ID ${id} not found`);
+    }
+    
+    return room;
+  }
+  
   // Appointment operations
   async getAppointment(id: number): Promise<Appointment | undefined> {
     const [appointment] = await db.select().from(appointments).where(eq(appointments.id, id));
@@ -538,6 +573,30 @@ export class DatabaseStorage implements IStorage {
         gte(appointments.date, startOfDay),
         sql`${appointments.date} < ${endOfDay}`
       ));
+  }
+  
+  async getAppointmentsByRoom(roomId: number, date?: Date): Promise<Appointment[]> {
+    if (date) {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      return await db
+        .select()
+        .from(appointments)
+        .where(and(
+          eq(appointments.roomId, roomId),
+          gte(appointments.date, startOfDay),
+          sql`${appointments.date} < ${endOfDay}`
+        ));
+    }
+    
+    return await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.roomId, roomId));
   }
   
   async getAppointmentsForToday(): Promise<Appointment[]> {
