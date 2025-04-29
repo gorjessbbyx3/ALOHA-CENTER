@@ -3,13 +3,20 @@ import { useQuery } from "@tanstack/react-query";
 import { 
   Settings, Plus, Edit, Trash, 
   ClipboardList, Grid, UserPlus, 
-  DoorOpen, Store, CalendarPlus 
+  DoorOpen, Store, CalendarPlus,
+  Palette, Type, LayoutGrid, Eye, EyeOff,
+  Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Service, Room } from "@shared/schema";
 
@@ -17,6 +24,19 @@ export const ManageTile = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("services");
   const { toast } = useToast();
+  
+  // Welcome text and dashboard options state
+  const [welcomeText, setWelcomeText] = useState("Welcome back, Dr. Sarah Chen");
+  const [dashboardTitle, setDashboardTitle] = useState("Welcome to Your Clinic Dashboard");
+  
+  // Dashboard display options
+  const [showAppointmentTile, setShowAppointmentTile] = useState(true);
+  const [showPosTile, setShowPosTile] = useState(true);
+  const [showMenuTile, setShowMenuTile] = useState(true);
+  const [showUpcomingAppointments, setShowUpcomingAppointments] = useState(true);
+  const [showAnalyticsTile, setShowAnalyticsTile] = useState(true);
+  const [showStickyNotes, setShowStickyNotes] = useState(true);
+  const [showTimeClockTile, setShowTimeClockTile] = useState(true);
   
   // Fetch services data
   const { data: services = [] } = useQuery<Service[]>({
@@ -29,11 +49,37 @@ export const ManageTile = () => {
   });
 
   const handleAction = (action: string, item?: any) => {
-    toast({
-      title: `${action} action`,
-      description: `The ${action} action would be executed here in a production app.`,
-    });
-    setIsOpen(false);
+    // Handle welcome text and dashboard options saving
+    if (action === "save-appearance") {
+      // In a real app, this would be saved to the database
+      // For now, we'll just show a toast message
+      toast({
+        title: "Appearance settings saved",
+        description: "Your dashboard appearance preferences have been updated.",
+      });
+      
+      // In a real implementation, we would update this in a global state or context
+      // so that other components can access the updated values
+      window.localStorage.setItem('welcomeText', welcomeText);
+      window.localStorage.setItem('dashboardTitle', dashboardTitle);
+      window.localStorage.setItem('dashboardOptions', JSON.stringify({
+        showAppointmentTile,
+        showPosTile,
+        showMenuTile,
+        showUpcomingAppointments,
+        showAnalyticsTile,
+        showStickyNotes,
+        showTimeClockTile
+      }));
+      
+      // We're not closing the dialog in this case to let users continue editing
+    } else {
+      toast({
+        title: `${action} action`,
+        description: `The ${action} action would be executed here in a production app.`,
+      });
+      setIsOpen(false);
+    }
   };
 
   return (
@@ -74,7 +120,7 @@ export const ManageTile = () => {
           
           <div className="mt-4 h-[calc(80vh-120px)]">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="h-full flex flex-col">
-              <TabsList className="grid grid-cols-5 mb-4">
+              <TabsList className="grid grid-cols-6 mb-4">
                 <TabsTrigger value="services">
                   <Store className="h-4 w-4 mr-2" />
                   Services
@@ -90,6 +136,10 @@ export const ManageTile = () => {
                 <TabsTrigger value="schedule">
                   <CalendarPlus className="h-4 w-4 mr-2" />
                   Schedule
+                </TabsTrigger>
+                <TabsTrigger value="appearance">
+                  <Palette className="h-4 w-4 mr-2" />
+                  Appearance
                 </TabsTrigger>
                 <TabsTrigger value="general">
                   <Settings className="h-4 w-4 mr-2" />
@@ -265,6 +315,159 @@ export const ManageTile = () => {
                     </Button>
                   </div>
                 </div>
+              </TabsContent>
+              
+              {/* Appearance Tab */}
+              <TabsContent value="appearance" className="h-full flex-1 flex flex-col">
+                <div className="flex justify-between mb-4">
+                  <h3 className="text-lg font-medium">Dashboard Appearance</h3>
+                  <Button size="sm" onClick={() => handleAction("save-appearance")}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </Button>
+                </div>
+                
+                <ScrollArea className="flex-1 border rounded-md p-5">
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <h4 className="text-base font-medium flex items-center">
+                        <Type className="h-4 w-4 mr-2" />
+                        Text Customization
+                      </h4>
+                      <Separator />
+                      
+                      <div className="grid gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="dashboardTitle">Dashboard Title</Label>
+                          <Input 
+                            id="dashboardTitle" 
+                            value={dashboardTitle}
+                            onChange={(e) => setDashboardTitle(e.target.value)}
+                            placeholder="Enter dashboard title"
+                          />
+                          <p className="text-xs text-muted-foreground">This appears at the top of the dashboard.</p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="welcomeText">Welcome Message</Label>
+                          <Input 
+                            id="welcomeText" 
+                            value={welcomeText}
+                            onChange={(e) => setWelcomeText(e.target.value)}
+                            placeholder="Enter welcome message"
+                          />
+                          <p className="text-xs text-muted-foreground">This appears beneath the dashboard title.</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4 pt-4">
+                      <h4 className="text-base font-medium flex items-center">
+                        <LayoutGrid className="h-4 w-4 mr-2" />
+                        Dashboard Tiles Display
+                      </h4>
+                      <Separator />
+                      
+                      <div className="grid gap-3">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="showAppointmentTile">Appointment Book Tile</Label>
+                            <p className="text-xs text-muted-foreground">Links to the main appointment calendar.</p>
+                          </div>
+                          <Switch 
+                            id="showAppointmentTile" 
+                            checked={showAppointmentTile}
+                            onCheckedChange={setShowAppointmentTile}
+                          />
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="showPosTile">Point of Sale (POS) Tile</Label>
+                            <p className="text-xs text-muted-foreground">For handling payments and transactions.</p>
+                          </div>
+                          <Switch 
+                            id="showPosTile" 
+                            checked={showPosTile}
+                            onCheckedChange={setShowPosTile}
+                          />
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="showMenuTile">Services Menu Tile</Label>
+                            <p className="text-xs text-muted-foreground">Displays available services.</p>
+                          </div>
+                          <Switch 
+                            id="showMenuTile" 
+                            checked={showMenuTile}
+                            onCheckedChange={setShowMenuTile}
+                          />
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="showUpcomingAppointments">Upcoming Appointments Tile</Label>
+                            <p className="text-xs text-muted-foreground">Shows the next appointments scheduled.</p>
+                          </div>
+                          <Switch 
+                            id="showUpcomingAppointments" 
+                            checked={showUpcomingAppointments}
+                            onCheckedChange={setShowUpcomingAppointments}
+                          />
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="showAnalyticsTile">Analytics Tile</Label>
+                            <p className="text-xs text-muted-foreground">Displays key performance metrics.</p>
+                          </div>
+                          <Switch 
+                            id="showAnalyticsTile" 
+                            checked={showAnalyticsTile}
+                            onCheckedChange={setShowAnalyticsTile}
+                          />
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="showStickyNotes">Sticky Notes Tile</Label>
+                            <p className="text-xs text-muted-foreground">For quick reminders and notes.</p>
+                          </div>
+                          <Switch 
+                            id="showStickyNotes" 
+                            checked={showStickyNotes}
+                            onCheckedChange={setShowStickyNotes}
+                          />
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="showTimeClockTile">Time Clock Tile</Label>
+                            <p className="text-xs text-muted-foreground">For staff check-in and time tracking.</p>
+                          </div>
+                          <Switch 
+                            id="showTimeClockTile" 
+                            checked={showTimeClockTile}
+                            onCheckedChange={setShowTimeClockTile}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </ScrollArea>
               </TabsContent>
               
               {/* General Settings Tab */}
