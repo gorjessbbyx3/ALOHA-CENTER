@@ -396,14 +396,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityType: "appointment"
       });
       
-      // If we have a patient email, send a receipt
+      // If we have a patient email, send a receipt and generate PDF
       try {
         const patient = await storage.getPatient(patientId);
+        const appointment = await storage.getAppointment(appointmentId);
+        
         if (patient && patient.email) {
           await sendPaymentReceipt(patient.email, patient.name, payment);
         }
+        
+        // Generate PDF invoice in background
+        if (appointment && patient && appointment.serviceId) {
+          const service = await storage.getService(appointment.serviceId);
+          if (service) {
+            generateInvoicePDF(payment, patient, appointment, service)
+              .then((pdfPath) => {
+                console.log(`Invoice PDF generated: ${pdfPath}`);
+                // Store PDF path for retrieval later if needed
+                storage.updatePayment(payment.id, { 
+                  invoicePdfPath: pdfPath 
+                }).catch(err => console.error("Error updating payment with PDF path:", err));
+              })
+              .catch(err => console.error("Error generating invoice PDF:", err));
+          }
+        }
       } catch (emailError) {
-        console.error("Failed to send payment receipt:", emailError);
+        console.error("Failed to send payment receipt or generate PDF:", emailError);
       }
       
       res.status(200).json({ success: true, payment });
@@ -423,6 +441,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activities = await storage.getRecentActivities(limit);
       res.json(activities);
     } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Generate appointment confirmation PDF
+  app.get("/api/appointments/:id/pdf", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const appointment = await storage.getAppointment(id);
+      
+      if (!appointment) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+      
+      const patient = appointment.patientId 
+        ? await storage.getPatient(appointment.patientId) 
+        : null;
+        
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+      
+      const service = appointment.serviceId 
+        ? await storage.getService(appointment.serviceId)
+        : null;
+        
+      if (!service) {
+        return res.status(404).json({ message: "Service not found" });
+      }
+      
+      const pdfPath = await generateAppointmentPDF(appointment, patient, service);
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=appointment_${id}.pdf`);
+      
+      // Send the file
+      fs.createReadStream(pdfPath).pipe(res);
+      
+      // Delete the file after sending
+      res.on('finish', () => {
+        fs.unlink(pdfPath, (err) => {
+          if (err) console.error(`Error deleting temporary PDF: ${err}`);
+        });
+      });
+    } catch (error: any) {
+      console.error("Error generating appointment PDF:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Generate invoice PDF
+  app.get("/api/payments/:id/pdf", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const payment = await storage.getPayment(id);
+      
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+      
+      // If we already have a PDF path and it exists, send that file
+      if (payment.invoicePdfPath && fs.existsSync(payment.invoicePdfPath)) {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=invoice_${id}.pdf`);
+        return fs.createReadStream(payment.invoicePdfPath).pipe(res);
+      }
+      
+      // Otherwise, generate a new PDF
+      const patient = payment.patientId 
+        ? await storage.getPatient(payment.patientId)
+        : null;
+        
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+      
+      const appointment = payment.appointmentId
+        ? await storage.getAppointment(payment.appointmentId)
+        : null;
+        
+      if (!appointment) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+      
+      const service = appointment.serviceId
+        ? await storage.getService(appointment.serviceId)
+        : null;
+        
+      if (!service) {
+        return res.status(404).json({ message: "Service not found" });
+      }
+      
+      const pdfPath = await generateInvoicePDF(payment, patient, appointment, service);
+      
+      // Update payment with PDF path
+      await storage.updatePayment(payment.id, { invoicePdfPath: pdfPath });
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=invoice_${id}.pdf`);
+      
+      // Send the file
+      fs.createReadStream(pdfPath).pipe(res);
+    } catch (error: any) {
+      console.error("Error generating invoice PDF:", error);
       res.status(500).json({ message: error.message });
     }
   });

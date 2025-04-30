@@ -122,6 +122,7 @@ export const payments = pgTable("payments", {
   transactionId: text("transaction_id"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   date: timestamp("date").defaultNow(),
+  invoicePdfPath: text("invoice_pdf_path"),
 });
 
 export const insertPaymentSchema = createInsertSchema(payments).pick({
@@ -132,6 +133,7 @@ export const insertPaymentSchema = createInsertSchema(payments).pick({
   status: true,
   transactionId: true,
   stripePaymentIntentId: true,
+  invoicePdfPath: true,
 });
 
 // Activity schema for tracking actions in the system
