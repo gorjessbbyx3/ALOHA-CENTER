@@ -1,0 +1,95 @@
+@gorjessbbyx3 ➜ /workspaces/AHC (main) $ git remote add origin https://github.com/gorjessbbyx3/ALOHA-CENTER.git
+u origin mainerror: remote origin already exists.
+@gorjessbbyx3 ➜ /workspaces/AHC (main) $ git branch -M main
+@gorjessbbyx3 ➜ /workspaces/AHC (main) $ git push -u origin main
+branch 'main' set up to track 'origin/main'.
+Everything up-to-date
+@gorjessbbyx3 ➜ /workspaces/AHC (main) $ npm install
+
+added 2 packages, and audited 959 packages in 3s
+
+114 packages are looking for funding
+  run `npm fund` for details
+
+7 moderate severity vulnerabilities
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+@gorjessbbyx3 ➜ /workspaces/AHC (main) $ npm audit fix --force
+npm warn using --force Recommended protections disabled.
+npm warn audit Updating drizzle-kit to 0.31.0, which is a SemVer major change.
+
+removed 4 packages, changed 9 packages, and audited 955 packages in 9s
+
+114 packages are looking for funding
+  run `npm fund` for details
+
+# npm audit report
+
+esbuild  <=0.24.2
+Severity: moderate
+esbuild enables any website to send any requests to the development server and read the response - https://github.com/advisories/GHSA-67mh-4wv8-2f99
+fix available via `npm audit fix --force`
+Will install vite@6.3.4, which is a breaking change
+node_modules/@esbuild-kit/core-utils/node_modules/esbuild
+node_modules/vite/node_modules/esbuild
+  @esbuild-kit/core-utils  *
+  Depends on vulnerable versions of esbuild
+  node_modules/@esbuild-kit/core-utils
+    @esbuild-kit/esm-loader  *
+    Depends on vulnerable versions of @esbuild-kit/core-utils
+    node_modules/@esbuild-kit/esm-loader
+      drizzle-kit  0.17.5-6b7793f - 0.17.5-e5944eb || 0.18.1-065de38 - 0.18.1-f3800bf || >=0.19.0-07024c4
+      Depends on vulnerable versions of @esbuild-kit/esm-loader
+      node_modules/drizzle-kit
+  vite  0.11.0 - 6.1.6
+  Depends on vulnerable versions of esbuild
+  node_modules/vite
+    @vitejs/plugin-react  2.0.0-alpha.0 - 4.3.3
+    Depends on vulnerable versions of vite
+    node_modules/@vitejs/plugin-react
+
+6 moderate severity vulnerabilities
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+@gorjessbbyx3 ➜ /workspaces/AHC (main) $ npm run dev
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/workspaces/AHC/server/index.ts' imported from /workspaces/AHC/
+    at finalizeResolution (node:internal/modules/esm/resolve:283:11)
+    at moduleResolve (node:internal/modules/esm/resolve:952:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+    at nextResolve (node:internal/modules/esm/hooks:864:28)
+    at resolveBase (file:///workspaces/AHC/node_modules/tsx/dist/esm/index.mjs?1745994061299:2:3212)
+    at resolveDirectory (file:///workspaces/AHC/node_modules/tsx/dist/esm/index.mjs?1745994061299:2:3584)
+    at resolveTsPaths (file:///workspaces/AHC/node_modules/tsx/dist/esm/index.mjs?1745994061299:2:4073)
+    at resolve (file:///workspaces/AHC/node_modules/tsx/dist/esm/index.mjs?1745994061299:2:4447)
+    at nextResolve (node:internal/modules/esm/hooks:864:28)
+    at Hooks.resolve (node:internal/modules/esm/hooks:306:30) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///workspaces/AHC/server/index.ts'
+}
+
+Node.js v20.19.0
+@gorjessbbyx3 ➜ /workspaces/AHC (main) $ npm run electron-dev
+npm error Missing script: "electron-dev"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /home/codespace/.npm/_logs/2025-04-30T06_21_33_438Z-debug-0.log
+@gorjessbbyx3 ➜ /workspaces/AHC (main) $ 

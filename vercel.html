@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vercel Deployment Information</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #0070f3;
+      border-bottom: 1px solid #eaeaea;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #0070f3;
+      margin-top: 30px;
+    }
+    pre {
+      background-color: #f6f8fa;
+      padding: 16px;
+      border-radius: 6px;
+      overflow: auto;
+    }
+    code {
+      font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+      font-size: 14px;
+    }
+    .tip {
+      background-color: #f0f7ff;
+      border-left: 4px solid #0070f3;
+      padding: 16px;
+      margin: 20px 0;
+    }
+    .warning {
+      background-color: #fff5f5;
+      border-left: 4px solid #e53e3e;
+      padding: 16px;
+      margin: 20px 0;
+    }
+    a {
+      color: #0070f3;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Aloha Healing Center - Vercel Deployment Information</h1>
+  
+  <p>This page provides information about deploying the Aloha Healing Center application on Vercel.</p>
+  
+  <div class="tip">
+    <strong>Note:</strong> If you're seeing this page, it means you've accessed a static file on your Vercel deployment. The application should be running at the root URL.
+  </div>
+  
+  <h2>Deployment Requirements</h2>
+  
+  <p>To successfully deploy this application on Vercel, you need:</p>
+  
+  <ol>
+    <li><strong>Database Connection:</strong> A PostgreSQL database accessible from Vercel (e.g., Vercel Postgres, Neon, Supabase)</li>
+    <li><strong>Environment Variables:</strong> Proper configuration of all required environment variables</li>
+    <li><strong>Build Configuration:</strong> Correct Vercel build settings</li>
+  </ol>
+  
+  <h2>Required Environment Variables</h2>
+  
+  <p>The following environment variables must be set in your Vercel project settings:</p>
+  
+  <pre><code>DATABASE_URL=postgresql://username:password@host:port/database
+NODE_ENV=production
+STRIPE_SECRET_KEY=sk_test_your_secret_key
+VITE_STRIPE_PUBLIC_KEY=pk_test_your_public_key
+CALENDLY_API_KEY=your_calendly_api_key
+CALENDLY_USER_URI=https://api.calendly.com/users/your_user_id
+CALENDLY_ORG_URI=https://api.calendly.com/organizations/your_org_id</code></pre>
+  
+  <h2>Troubleshooting</h2>
+  
+  <div class="warning">
+    <strong>Common Issues:</strong>
+    <ul>
+      <li>Database connection errors - Make sure DATABASE_URL is correctly set and the database is accessible</li>
+      <li>Missing environment variables - Verify all required variables are set in Vercel</li>
+      <li>API connection failures - Check if API routes are correctly configured in vercel.json</li>
+    </ul>
+  </div>
+  
+  <h3>Database Migrations</h3>
+  
+  <p>After deploying, you may need to run database migrations. You can do this with the provided script:</p>
+  
+  <pre><code>node vercel-db-migrate.js</code></pre>
+  
+  <h2>Resources</h2>
+  
+  <ul>
+    <li><a href="https://vercel.com/docs">Vercel Documentation</a></li>
+    <li><a href="https://vercel.com/docs/projects/environment-variables">Environment Variables on Vercel</a></li>
+    <li><a href="https://vercel.com/docs/storage/vercel-postgres">Vercel Postgres</a></li>
+  </ul>
+  
+  <p>For detailed deployment instructions, refer to the <a href="VERCEL_DEPLOYMENT.md">VERCEL_DEPLOYMENT.md</a> file in the repository.</p>
+  
+  <footer style="margin-top: 50px; border-top: 1px solid #eaeaea; padding-top: 20px; text-align: center;">
+    <p>Aloha Healing Center © 2025</p>
+  </footer>
+</body>
+</html>

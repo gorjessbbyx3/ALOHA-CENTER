@@ -5,7 +5,7 @@
       "src": "vercel-build.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["dist/**", "client/**", "server/**", "shared/**"]
+        "includeFiles": ["dist/**", "client/**", "server/**", "shared/**", "*.html", "*.md"]
       }
     }
   ],
@@ -13,6 +13,14 @@
     {
       "src": "/api/(.*)",
       "dest": "/dist/index.js"
+    },
+    {
+      "src": "/vercel-info",
+      "dest": "/vercel.html"
+    },
+    {
+      "src": "/(.*\\.md)",
+      "dest": "/$1"
     },
     {
       "handle": "filesystem"
