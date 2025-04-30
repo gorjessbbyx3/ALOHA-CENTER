@@ -130,16 +130,21 @@ export const payments = pgTable("payments", {
   invoicePdfPath: text("invoice_pdf_path"),
 });
 
-export const insertPaymentSchema = createInsertSchema(payments).pick({
-  appointmentId: true,
-  patientId: true,
-  amount: true,
-  paymentMethod: true,
-  status: true,
-  transactionId: true,
-  stripePaymentIntentId: true,
-  invoicePdfPath: true,
-});
+export const insertPaymentSchema = createInsertSchema(payments)
+  .pick({
+    appointmentId: true,
+    patientId: true,
+    amount: true,
+    paymentMethod: true,
+    status: true,
+    transactionId: true,
+    stripePaymentIntentId: true,
+    invoicePdfPath: true,
+  })
+  .extend({
+    // Allow number for amount (will be converted to string)
+    amount: z.union([z.string(), z.number().transform(n => n.toString())])
+  });
 
 // Activity schema for tracking actions in the system
 export const activities = pgTable("activities", {
