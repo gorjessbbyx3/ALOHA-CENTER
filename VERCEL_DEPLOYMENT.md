@@ -132,6 +132,7 @@ If you encounter database connection problems:
 1. Verify your `DATABASE_URL` in environment variables
 2. Ensure your database is accessible from Vercel's servers
 3. Check that you've allowed external connections in your database settings
+4. For AWS RDS connections, ensure your security group allows inbound connections
 
 ### Build Failures
 
@@ -139,12 +140,42 @@ If deployment fails:
 1. Check build logs for specific errors
 2. Verify all dependencies are properly installed
 3. Make sure the vercel.json configuration is correct
+4. If you see ESM import errors, ensure the build script is using the correct format (CJS for compatibility)
+
+### Common Vercel Error Codes
+
+Based on the Vercel error codes you might encounter:
+
+#### FUNCTION_INVOCATION_FAILED (Function500)
+- **Issue**: The server-side function crashed or returned an error.
+- **Solution**: Check server logs for exceptions. Ensure all environment variables are correctly set. Make sure database connections are properly established.
+
+#### FUNCTION_INVOCATION_TIMEOUT (Function504)
+- **Issue**: The server function took too long to respond.
+- **Solution**: Optimize database queries, add proper indexes, or increase function timeout in Vercel settings.
+
+#### FUNCTION_PAYLOAD_TOO_LARGE (Function413)
+- **Issue**: Request body exceeds size limits.
+- **Solution**: Reduce payload size or use streaming for file uploads.
+
+#### DEPLOYMENT_NOT_FOUND (Deployment404)
+- **Issue**: The specified deployment doesn't exist.
+- **Solution**: Check deployment URL and ensure it has been successfully deployed.
+
+#### ROUTER_CANNOT_MATCH (Routing502)
+- **Issue**: The router can't find a matching route for the request.
+- **Solution**: Check your vercel.json routes configuration and ensure it covers all patterns.
+
+#### Database-Specific Issues
+- If using PostgreSQL with AWS RDS, ensure your database credentials are correctly set up.
+- For connection string format issues, make sure to URL-encode special characters in passwords.
 
 ### API Connection Issues
 
 If frontend can't connect to the backend:
 1. Ensure API routes are correctly set up in vercel.json
 2. Check browser console for CORS or other connection errors
+3. Verify the API endpoint URLs match the server routes (e.g., /api/services)
 
 ## Maintenance
 
