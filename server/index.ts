@@ -39,13 +39,32 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
+  // For Vercel deployments, use the specialized error handler
+  if (process.env.VERCEL === '1') {
+    try {
+      // Dynamic import to avoid TypeScript errors
+      const { vercelErrorHandler } = require('../vercel-error-handler');
+      app.use(vercelErrorHandler);
+    } catch (e) {
+      console.warn('Vercel error handler not available, using default');
+      app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+        const status = err.status || err.statusCode || 500;
+        const message = err.message || "Internal Server Error";
+    
+        res.status(status).json({ message });
+        throw err;
+      });
+    }
+  } else {
+    // Default error handler for non-Vercel environments
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+  
+      res.status(status).json({ message });
+      throw err;
+    });
+  }
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route

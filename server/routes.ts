@@ -62,6 +62,10 @@ async function seedInitialData() {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for Vercel deployment
+  app.get("/api/health-check", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  });
   // Seed initial rooms
   try {
     const existingRooms = await db.select().from(rooms);

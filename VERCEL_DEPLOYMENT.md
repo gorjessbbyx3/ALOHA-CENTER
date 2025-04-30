@@ -1,196 +1,148 @@
-# Deploying to Vercel
+# Vercel Deployment Guide
 
-This guide provides step-by-step instructions for deploying the Aloha Healing Center clinic management system to Vercel.
+This guide provides instructions for deploying the Aloha Healing Center application on Vercel, including common issues and their solutions.
 
-## Prerequisites
+## Quick Start
 
-1. A [Vercel account](https://vercel.com/signup)
-2. A [GitHub account](https://github.com/signup) (optional but recommended)
-3. The Aloha Healing Center codebase
-4. A database solution (PostgreSQL or Neon Database recommended)
+1. **Fork or clone this repository to your GitHub account**
+2. **Connect your GitHub repository to Vercel**:
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click "Add New" → "Project"
+   - Select your repository
+   - Follow the prompts to configure your project
 
-## Setup Steps
+3. **Configure Environment Variables**:
+   - In your Vercel project settings, add the following environment variables:
 
-### 1. Prepare your database
-
-For production deployment, you'll need a PostgreSQL database. We recommend:
-
-- [Neon Database](https://neon.tech/) - Free tier available
-- [Supabase](https://supabase.com/) - Free tier available
-- [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres) - Available on Vercel Pro plans
-
-After setting up your database, keep your database credentials handy for the next steps.
-
-### 2. Set up environment variables
-
-Before deploying, ensure you have these environment variables ready:
-
-- `DATABASE_URL` - Your PostgreSQL connection string
-- `STRIPE_SECRET_KEY` and `VITE_STRIPE_PUBLIC_KEY` (if using payment processing)
-- `SENDGRID_API_KEY` (if using email notifications)
-
-If you're using AWS RDS Data API, you'll also need:
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_REGION`
-- `DB_INSTANCE_IDENTIFIER`
-- `DB_NAME`
-- `DB_SECRET_ARN`
-- `DB_RESOURCE_ARN`
-
-### 3. Deploy to Vercel
-
-#### Option A: Deploy from the Vercel Dashboard
-
-1. Push your code to a Git repository (GitHub, GitLab, or Bitbucket)
-2. Log in to your [Vercel dashboard](https://vercel.com/dashboard)
-3. Click "Add New..." and select "Project"
-4. Import your Git repository
-5. Configure the project:
-   - Build Command: Leave blank (uses vercel.json)
-   - Output Directory: Leave blank (uses vercel.json)
-   - Install Command: `npm install`
-6. Add environment variables:
-   - Click "Environment Variables"
-   - Add all the required variables listed above
-7. Click "Deploy"
-
-#### Option B: Deploy using the Vercel CLI
-
-1. Install the Vercel CLI:
    ```
-   npm install -g vercel
+   DATABASE_URL=postgresql://username:password@host:port/database
+   NODE_ENV=production
+   STRIPE_SECRET_KEY=sk_test_your_secret_key
+   VITE_STRIPE_PUBLIC_KEY=pk_test_your_public_key
+   CALENDLY_API_KEY=your_calendly_api_key
+   CALENDLY_USER_URI=https://api.calendly.com/users/your_user_id
+   CALENDLY_ORG_URI=https://api.calendly.com/organizations/your_org_id
    ```
 
-2. Log in to Vercel:
-   ```
-   vercel login
-   ```
+4. **Deploy Your Project**:
+   - Click "Deploy" in the Vercel dashboard
 
-3. Navigate to your project directory and run:
-   ```
-   vercel
-   ```
+## Database Setup
 
-4. Follow the prompts to set up the project:
-   - Set up and deploy: Yes
-   - Link to existing project: No
-   - Project name: [Your project name]
-   - Directory: ./
+For production deployments, we recommend using one of these database providers:
 
-5. Set environment variables:
-   ```
-   vercel env add DATABASE_URL
-   vercel env add STRIPE_SECRET_KEY
-   # Add other variables as needed
-   ```
+- [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres)
+- [Neon](https://neon.tech)
+- [Supabase](https://supabase.com)
 
-6. Deploy the production version:
-   ```
-   vercel --prod
-   ```
+After configuring your database, update the `DATABASE_URL` environment variable in your Vercel project settings.
 
-### 4. Initialize the database (first-time setup)
+### Database Migration
 
-After deploying, you need to run the database migrations to set up your database schema. You can do this in two ways:
+After deploying for the first time, you need to run database migrations:
 
-#### Option A: Using the Vercel CLI
+1. Clone your Vercel project locally using the Vercel CLI
+2. Run `npm run db:push` to push the database schema
 
-```bash
-# Connect to your Vercel project
-vercel env pull .env.production
-# Run migrations
-npm run db:push
-```
+Alternatively, you can use the `vercel-db-migrate.js` script included in this project.
 
-#### Option B: Using the Vercel Dashboard
+## Common Deployment Errors and Solutions
 
-1. Go to your Vercel project
-2. Click on "Functions" tab
-3. Find a function and click "View Runtime Logs"
-4. Open the console 
-5. Run: `npm run db:push`
+### Function Errors
 
-## Post-Deployment Tasks
+| Error Code | Description | Solution |
+|------------|-------------|----------|
+| `FUNCTION_INVOCATION_FAILED` | Server function execution failed | Check server logs for errors. Common causes include missing environment variables, database connection issues, or API failures. |
+| `FUNCTION_INVOCATION_TIMEOUT` | Function exceeded time limit | Optimize database queries, reduce external API calls, or use Edge Functions for performance-critical operations. Split complex operations into multiple smaller functions. |
+| `FUNCTION_PAYLOAD_TOO_LARGE` | Request/response payload too large | Reduce the size of request/response data. Consider pagination for large datasets or client-side filtering. Compress responses if needed. |
+| `NO_RESPONSE_FROM_FUNCTION` | Function did not respond | Check for infinite loops or hanging promises in your serverless functions. Add proper error handling to ensure functions always return a response. |
 
-### Add your domain (optional)
+### Deployment Errors
 
-1. Go to your project in the Vercel dashboard
-2. Click on "Domains"
-3. Add your custom domain and follow the verification steps
+| Error Code | Description | Solution |
+|------------|-------------|----------|
+| `DEPLOYMENT_NOT_FOUND` | Deployment not found | Verify deployment status in Vercel dashboard and ensure the deployment URL is correct. Check for typos in URLs. |
+| `DEPLOYMENT_NOT_READY_REDIRECTING` | Deployment still building/preparing | Wait for the deployment to complete. Check build logs in Vercel dashboard for any issues that may be slowing down deployment. |
+| `DEPLOYMENT_BLOCKED` | Deployment blocked | This usually happens due to billing or account issues. Check your Vercel account status and billing information. |
+| `DEPLOYMENT_PAUSED` | Deployment paused | Visit your Vercel dashboard to resume the deployment. This may happen if auto-deployments are paused. |
 
-### Set up monitoring and analytics
+### DNS and Routing Errors
 
-1. Enable [Analytics](https://vercel.com/docs/analytics) in the Vercel dashboard
-2. Consider adding [Sentry](https://vercel.com/integrations/sentry) for error tracking
+| Error Code | Description | Solution |
+|------------|-------------|----------|
+| `DNS_HOSTNAME_NOT_FOUND` | Hostname not found | Verify DNS configuration for your domain. Check nameservers and DNS propagation status. |
+| `DNS_HOSTNAME_RESOLVED_PRIVATE` | DNS resolved to private IP | Your DNS is pointing to a private IP address that Vercel cannot access. Update your DNS records. |
+| `ROUTER_CANNOT_MATCH` | Router cannot match path | Check your routing configuration. Ensure all routes are properly defined and don't conflict. |
+| `NOT_FOUND` | Resource not found | Check file paths and API routes. Ensure static files are in the correct directory and API endpoints are properly defined. |
 
-## Troubleshooting
+### Request and Response Errors
 
-### Database Connection Issues
+| Error Code | Description | Solution |
+|------------|-------------|----------|
+| `REQUEST_HEADER_TOO_LARGE` | Request header too large | Reduce the size of request headers. Split cookies or authorization tokens if needed. |
+| `RANGE_GROUP_NOT_VALID` | Invalid range request | Fix range requests in your client code or consider disabling range requests if not needed. |
+| `URL_TOO_LONG` | URL exceeds length limit | Shorten URLs or move long parameters to the request body using POST instead of GET. |
 
-If you encounter database connection problems:
-1. Verify your `DATABASE_URL` in environment variables
-2. Ensure your database is accessible from Vercel's servers
-3. Check that you've allowed external connections in your database settings
-4. For AWS RDS connections, ensure your security group allows inbound connections
+## Troubleshooting Steps
 
-### Build Failures
+If you encounter deployment issues:
 
-If deployment fails:
-1. Check build logs for specific errors
-2. Verify all dependencies are properly installed
-3. Make sure the vercel.json configuration is correct
-4. If you see ESM import errors, ensure the build script is using the correct format (CJS for compatibility)
+1. **Check Environment Variables**:
+   - Verify all required environment variables are set correctly
+   - Ensure sensitive values have not been accidentally truncated
 
-### Common Vercel Error Codes
+2. **Review Build Logs**:
+   - Check the build logs in your Vercel dashboard for errors
+   - Look for failed dependencies or build steps
 
-Based on the Vercel error codes you might encounter:
+3. **Database Connectivity**:
+   - Confirm your database is accessible from Vercel's servers
+   - Check IP allow-lists and firewall settings
 
-#### FUNCTION_INVOCATION_FAILED (Function500)
-- **Issue**: The server-side function crashed or returned an error.
-- **Solution**: Check server logs for exceptions. Ensure all environment variables are correctly set. Make sure database connections are properly established.
+4. **Runtime Errors**:
+   - Check function logs in your Vercel dashboard
+   - Test your API endpoints individually
 
-#### FUNCTION_INVOCATION_TIMEOUT (Function504)
-- **Issue**: The server function took too long to respond.
-- **Solution**: Optimize database queries, add proper indexes, or increase function timeout in Vercel settings.
+5. **Use the In-App Diagnostic Tool**:
+   - The application includes a Vercel compatibility checker tool
+   - Click on the "Vercel Compatible" button in the bottom-right corner of the app
 
-#### FUNCTION_PAYLOAD_TOO_LARGE (Function413)
-- **Issue**: Request body exceeds size limits.
-- **Solution**: Reduce payload size or use streaming for file uploads.
+## Advanced Configuration
 
-#### DEPLOYMENT_NOT_FOUND (Deployment404)
-- **Issue**: The specified deployment doesn't exist.
-- **Solution**: Check deployment URL and ensure it has been successfully deployed.
+### Custom Domain Setup
 
-#### ROUTER_CANNOT_MATCH (Routing502)
-- **Issue**: The router can't find a matching route for the request.
-- **Solution**: Check your vercel.json routes configuration and ensure it covers all patterns.
+1. Go to your Vercel project settings
+2. Navigate to the "Domains" section
+3. Add your custom domain
+4. Follow the DNS configuration instructions
 
-#### Database-Specific Issues
-- If using PostgreSQL with AWS RDS, ensure your database credentials are correctly set up.
-- For connection string format issues, make sure to URL-encode special characters in passwords.
+### Deployment Branches
 
-### API Connection Issues
+Configure which branches to deploy:
 
-If frontend can't connect to the backend:
-1. Ensure API routes are correctly set up in vercel.json
-2. Check browser console for CORS or other connection errors
-3. Verify the API endpoint URLs match the server routes (e.g., /api/services)
+1. Go to your Vercel project settings
+2. Navigate to the "Git" section
+3. Configure production and preview branch settings
 
-## Maintenance
+### Environment Separation
 
-### Updating your deployment
+For different environments (development, staging, production):
 
-Any push to your connected Git repository will trigger a new deployment automatically.
-
-To manually redeploy:
-1. Go to your project in the Vercel dashboard
-2. Click "Deployments"
-3. Click "Redeploy" on the latest deployment
+1. Create different Vercel projects for each environment
+2. Configure environment-specific variables
+3. Connect each project to appropriate branches in your repository
 
 ## Resources
 
 - [Vercel Documentation](https://vercel.com/docs)
-- [PostgreSQL on Vercel](https://vercel.com/docs/storage/vercel-postgres)
-- [Environment Variables on Vercel](https://vercel.com/docs/projects/environment-variables)
-- [Custom Domains on Vercel](https://vercel.com/docs/concepts/projects/domains)
+- [Vercel CLI Documentation](https://vercel.com/docs/cli)
+- [Stripe Documentation](https://stripe.com/docs)
+- [Vercel Error Codes Reference](https://vercel.com/docs/errors/error-list)
+
+## Support
+
+If you continue to experience issues with deployment, please:
+
+1. Visit the Vercel help center: https://vercel.com/help
+2. Contact Vercel support directly from your dashboard
+3. Check GitHub issues for this repository for similar problems and solutions

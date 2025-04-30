@@ -64,6 +64,17 @@ try {
     } catch (chmodError) {
       console.warn('Warning: Could not make index.js executable:', chmodError.message);
     }
+    
+    // Copy the error handler to the dist directory
+    console.log('✅ Setting up Vercel error handling...');
+    try {
+      fs.copyFileSync(
+        path.join(__dirname, 'vercel-error-handler.js'),
+        path.join(__dirname, 'dist', 'vercel-error-handler.js')
+      );
+    } catch (copyError) {
+      console.warn('Warning: Could not copy error handler:', copyError.message);
+    }
   }
   
   // Verify the build
