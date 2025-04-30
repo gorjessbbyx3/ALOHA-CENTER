@@ -83,6 +83,18 @@ Alternatively, you can use the `vercel-db-migrate.js` script included in this pr
 | `RANGE_GROUP_NOT_VALID` | Invalid range request | Fix range requests in your client code or consider disabling range requests if not needed. |
 | `URL_TOO_LONG` | URL exceeds length limit | Shorten URLs or move long parameters to the request body using POST instead of GET. |
 
+### Internal Platform Errors
+
+If you encounter any of these errors, they're typically related to Vercel's internal platform infrastructure and may require Vercel support assistance.
+
+| Error Code | Description | Solution |
+|------------|-------------|----------|
+| `INTERNAL_FUNCTION_INVOCATION_FAILED` | Internal function execution failed | Check your deployment logs for specific error messages. Try redeploying, and if issues persist, contact Vercel support. |
+| `INTERNAL_FUNCTION_NOT_READY` | Function not ready to serve requests | This is usually temporary during cold starts or initial deployment. Wait a few minutes and try again. If persistent, contact Vercel support. |
+| `INTERNAL_CACHE_ERROR` | Vercel caching system issue | Try invalidating the build cache by redeploying. If issues persist, contact Vercel support. |
+| `INTERNAL_DEPLOYMENT_FETCH_FAILED` | Failure to fetch deployment | This is usually temporary. Wait a few minutes and try again. If persistent, contact Vercel support. |
+| `INTERNAL_UNEXPECTED_ERROR` | Unexpected platform error | Contact Vercel support with details about your deployment configuration. |
+
 ## Troubleshooting Steps
 
 If you encounter deployment issues:

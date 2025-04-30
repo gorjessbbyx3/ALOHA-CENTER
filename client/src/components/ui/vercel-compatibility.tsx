@@ -21,7 +21,11 @@ type VercelErrorType =
   | "FUNCTION_PAYLOAD_TOO_LARGE"
   | "DEPLOYMENT_NOT_READY_REDIRECTING"
   | "DNS_HOSTNAME_NOT_FOUND"
-  | "NOT_FOUND";
+  | "NOT_FOUND"
+  | "INTERNAL_FUNCTION_INVOCATION_FAILED"
+  | "INTERNAL_CACHE_ERROR"
+  | "INTERNAL_DEPLOYMENT_FETCH_FAILED"
+  | "INTERNAL_FUNCTION_NOT_READY";
 
 interface VercelErrorInfo {
   type: VercelErrorType;
@@ -72,6 +76,30 @@ const VERCEL_ERRORS: Record<VercelErrorType, VercelErrorInfo> = {
     title: "Resource Not Found",
     description: "The requested resource could not be found.",
     solution: "Check file paths and API routes. Ensure static files are in the correct directory and API endpoints are properly defined."
+  },
+  INTERNAL_FUNCTION_INVOCATION_FAILED: {
+    type: "INTERNAL_FUNCTION_INVOCATION_FAILED",
+    title: "Internal Function Error",
+    description: "A Vercel internal function has failed during execution.",
+    solution: "This is a Vercel platform error. Check your deployment logs and contact Vercel support if the issue persists."
+  },
+  INTERNAL_CACHE_ERROR: {
+    type: "INTERNAL_CACHE_ERROR",
+    title: "Cache Error",
+    description: "There was an issue with Vercel's caching system.",
+    solution: "Try manually invalidating the build cache by redeploying. If the issue persists, contact Vercel support."
+  },
+  INTERNAL_DEPLOYMENT_FETCH_FAILED: {
+    type: "INTERNAL_DEPLOYMENT_FETCH_FAILED",
+    title: "Deployment Fetch Failed",
+    description: "Vercel was unable to fetch your deployment.",
+    solution: "This is usually a temporary issue. Try redeploying your application. If the issue persists, contact Vercel support."
+  },
+  INTERNAL_FUNCTION_NOT_READY: {
+    type: "INTERNAL_FUNCTION_NOT_READY",
+    title: "Function Not Ready",
+    description: "A serverless function is not yet ready to serve requests.",
+    solution: "This typically happens during cold starts or when a deployment is still being prepared. Wait a few minutes and try again."
   }
 };
 
