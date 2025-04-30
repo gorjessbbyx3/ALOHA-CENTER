@@ -28,10 +28,10 @@ export function Sidebar({ className }: SidebarProps) {
               <div className="flex-1">
                 <Link href="/">
                   <div className={cn(
-                    "flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
+                    "flex items-center justify-center px-2 py-2 text-sm font-bold rounded-md border-2",
                     isActive("/") 
-                      ? "bg-primary text-white" 
-                      : "bg-gray-700 text-white hover:bg-gray-600"
+                      ? "bg-primary text-white border-white" 
+                      : "bg-blue-600 text-white hover:bg-blue-500 border-white"
                   )}>
                     Home
                   </div>
@@ -40,10 +40,10 @@ export function Sidebar({ className }: SidebarProps) {
               <div className="flex-1">
                 <Link href="/appointments">
                   <div className={cn(
-                    "flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
+                    "flex items-center justify-center px-2 py-2 text-sm font-bold rounded-md border-2",
                     isActive("/appointments") 
-                      ? "bg-primary text-white" 
-                      : "bg-gray-700 text-white hover:bg-gray-600"
+                      ? "bg-primary text-white border-white" 
+                      : "bg-blue-600 text-white hover:bg-blue-500 border-white"
                   )}>
                     Register
                   </div>
@@ -52,10 +52,10 @@ export function Sidebar({ className }: SidebarProps) {
               <div className="flex-1">
                 <Link href="/services">
                   <div className={cn(
-                    "flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
+                    "flex items-center justify-center px-2 py-2 text-sm font-bold rounded-md border-2",
                     isActive("/services") 
-                      ? "bg-primary text-white" 
-                      : "bg-gray-700 text-white hover:bg-gray-600"
+                      ? "bg-primary text-white border-white" 
+                      : "bg-blue-600 text-white hover:bg-blue-500 border-white"
                   )}>
                     Products
                   </div>
@@ -64,10 +64,10 @@ export function Sidebar({ className }: SidebarProps) {
               <div className="flex-1">
                 <Link href="/reports">
                   <div className={cn(
-                    "flex items-center justify-center px-2 py-2 text-sm font-medium rounded-md",
+                    "flex items-center justify-center px-1 py-2 text-sm font-bold rounded-md border-2",
                     isActive("/reports") 
-                      ? "bg-primary text-white" 
-                      : "bg-gray-700 text-white hover:bg-gray-600"
+                      ? "bg-primary text-white border-white" 
+                      : "bg-blue-600 text-white hover:bg-blue-500 border-white"
                   )}>
                     Reports
                   </div>
