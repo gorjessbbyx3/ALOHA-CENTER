@@ -7,6 +7,9 @@ import { appointments, insertAppointmentSchema, insertPatientSchema, insertPayme
 import { z } from "zod";
 import { sendAppointmentConfirmation, sendPaymentReceipt } from "./email";
 import { db } from "./db";
+import { generateAppointmentPDF, generateInvoicePDF } from "./pdf-generator";
+import fs from "fs";
+import path from "path";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('Missing STRIPE_SECRET_KEY environment variable. Payment processing will not work correctly.');
