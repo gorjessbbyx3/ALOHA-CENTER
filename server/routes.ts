@@ -552,6 +552,199 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POS Routes
+  // Get all products and services for POS
+  app.get("/api/pos/products", async (req, res) => {
+    try {
+      // Combine services (as service type) and products (if we had them)
+      const services = await storage.getServices();
+      
+      // Format services as POS products
+      const serviceProducts = services.map(service => ({
+        id: service.id,
+        name: service.name,
+        price: parseFloat(service.price),
+        category: "service",
+        description: service.description,
+        duration: service.duration
+      }));
+      
+      // Sample retail products (in a real app, these would come from a 'products' table)
+      const retailProducts = [
+        { id: 1001, name: "Coconut Oil", price: 22, category: "product", description: "Organic coconut oil for skin and hair" },
+        { id: 1002, name: "Aloe Vera Gel", price: 18, category: "product", description: "Soothing gel for sunburns and skin care" },
+        { id: 1003, name: "Lavender Bath Salts", price: 15, category: "product", description: "Relaxing bath salts for home spa experience" },
+        { id: 1004, name: "Healing Balm", price: 26, category: "product", description: "All-purpose healing balm with herbs" },
+        { id: 1005, name: "Tea Tree Oil", price: 19, category: "product", description: "Pure tea tree oil for skin treatments" },
+      ];
+      
+      const allProducts = [...serviceProducts, ...retailProducts];
+      
+      res.json(allProducts);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Get all customers for POS
+  app.get("/api/pos/customers", async (req, res) => {
+    try {
+      const patients = await storage.getPatients();
+      
+      // Format patients as customers for POS
+      const customers = patients.map(patient => ({
+        id: patient.id,
+        name: patient.name,
+        email: patient.email || "",
+        phone: patient.phone || "",
+        avatar: null
+      }));
+      
+      res.json(customers);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Create POS payment intent
+  app.post("/api/pos/create-payment-intent", async (req, res) => {
+    try {
+      const { amount, items, customerId, metadata = {} } = req.body;
+      
+      if (!amount) {
+        return res.status(400).json({ message: "Amount is required" });
+      }
+      
+      // Add additional metadata
+      const paymentMetadata: Record<string, string> = {
+        ...metadata,
+        paymentType: "pos_transaction",
+      };
+      
+      if (customerId) {
+        const patient = await storage.getPatient(customerId);
+        if (patient) {
+          paymentMetadata.customerId = customerId.toString();
+          paymentMetadata.customerName = patient.name;
+        }
+      }
+      
+      // Items information (serialized)
+      if (items && Array.isArray(items)) {
+        paymentMetadata.itemsCount = items.length.toString();
+        paymentMetadata.items = JSON.stringify(items.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        })));
+      }
+      
+      // Create payment intent using our service
+      const paymentIntent = await stripeService.createPaymentIntent(
+        amount,
+        "usd",
+        paymentMetadata
+      );
+      
+      // Log the activity
+      await storage.createActivity({
+        type: "pos_payment_intent_created",
+        description: `Created POS payment intent for $${amount.toFixed(2)}`,
+        entityId: customerId || 0,
+        entityType: customerId ? "patient" : "pos"
+      });
+      
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id
+      });
+    } catch (error: any) {
+      console.error("Error creating POS payment intent:", error);
+      res.status(500).json({ 
+        message: "Error creating payment intent", 
+        error: error.message 
+      });
+    }
+  });
+  
+  // Record POS payment
+  app.post("/api/pos/record-payment", async (req, res) => {
+    try {
+      const { 
+        paymentIntentId, 
+        customerId, 
+        amount, 
+        items, 
+        paymentMethod, 
+        status = "completed"
+      } = req.body;
+      
+      // Validate the payment with Stripe if paymentIntentId provided
+      if (paymentIntentId) {
+        const paymentIntent = await stripeService.retrievePaymentIntent(paymentIntentId);
+        if (paymentIntent.status !== 'succeeded') {
+          console.warn(`Payment intent ${paymentIntentId} has status ${paymentIntent.status}, not 'succeeded'`);
+        }
+      }
+      
+      // Format for storage
+      const paymentData: any = {
+        amount: amount.toString(),
+        paymentMethod: paymentMethod || "credit_card",
+        status,
+        transactionId: paymentIntentId || `pos_${Date.now()}`,
+        receiptSent: false
+      };
+      
+      // Add patient reference if customer exists
+      if (customerId) {
+        paymentData.patientId = customerId;
+      }
+      
+      // Store payment record
+      const payment = await storage.createPayment(paymentData);
+      
+      // Store items as separate records (if we had a line_items table)
+      // For now, we'll use the activity log to record this information
+      const itemsList = items?.map((item: any) => 
+        `${item.quantity}x ${item.name} ($${item.price.toFixed(2)} each)`
+      ).join(", ") || "No items";
+      
+      // Log the activity
+      await storage.createActivity({
+        type: "pos_payment_recorded",
+        description: `POS payment of $${amount.toFixed(2)} recorded. Items: ${itemsList}`,
+        entityId: payment.id,
+        entityType: "payment"
+      });
+      
+      // Send receipt if email available and customerId provided
+      if (customerId) {
+        try {
+          const patient = await storage.getPatient(customerId);
+          if (patient && patient.email) {
+            // In a real implementation, we would create a POS-specific receipt
+            await sendPaymentReceipt(patient.email, patient.name, payment);
+            
+            // Update payment to indicate receipt was sent
+            await storage.updatePayment(payment.id, { status: "completed_receipt_sent" });
+          }
+        } catch (emailError) {
+          console.error("Failed to send POS payment receipt:", emailError);
+        }
+      }
+      
+      res.status(201).json({ success: true, payment });
+    } catch (error: any) {
+      console.error("Error recording POS payment:", error);
+      res.status(500).json({ 
+        message: "Error recording payment", 
+        error: error.message 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

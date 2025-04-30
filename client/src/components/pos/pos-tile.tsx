@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Check, ShoppingCart, Plus, Minus, Search, User, Box, Tag, CreditCard, Sparkles, Clock, DollarSign, Percent, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, ShoppingCart, Plus, Minus, Search, User, Box, Tag, CreditCard, Sparkles, Clock, DollarSign, Percent, X, ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,25 +12,27 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
-// Sample product data - in a real app, this would come from an API
-const sampleProducts = [
-  { id: 1, name: "Hawaiian Therapeutic Massage", price: 95, category: "service", description: "60 minute full-body massage with tropical oils", image: null },
-  { id: 2, name: "Deep Tissue Massage", price: 110, category: "service", description: "Targeted deep tissue massage for pain relief", image: null },
-  { id: 3, name: "Facial Treatment", price: 85, category: "service", description: "Relaxing facial with natural ingredients", image: null },
-  { id: 4, name: "Coconut Oil", price: 22, category: "product", description: "Organic coconut oil for skin and hair", image: null },
-  { id: 5, name: "Aloe Vera Gel", price: 18, category: "product", description: "Soothing gel for sunburns and skin care", image: null },
-  { id: 6, name: "Lavender Bath Salts", price: 15, category: "product", description: "Relaxing bath salts for home spa experience", image: null },
-  { id: 7, name: "Healing Balm", price: 26, category: "product", description: "All-purpose healing balm with herbs", image: null },
-  { id: 8, name: "Tea Tree Oil", price: 19, category: "product", description: "Pure tea tree oil for skin treatments", image: null },
-];
+// Types for our data
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  description?: string;
+  image?: string | null;
+  duration?: number;
+};
 
-// Sample customers
-const sampleCustomers = [
-  { id: 1, name: "Emma Johnson", email: "emma@example.com", avatar: null },
-  { id: 2, name: "Daniel Smith", email: "daniel@example.com", avatar: null },
-  { id: 3, name: "Sophia Martinez", email: "sophia@example.com", avatar: null },
-];
+type Customer = {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string;
+  avatar?: string | null;
+};
 
 type CartItem = {
   id: number;
@@ -54,15 +56,110 @@ export const PosTile = () => {
   const [checkoutStage, setCheckoutStage] = useState<CheckoutStage>("cart");
   const [paymentMethod, setPaymentMethod] = useState<string>("credit");
   const [isTipPercentage, setIsTipPercentage] = useState(true);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const filteredProducts = sampleProducts.filter(product => 
+  // Fetch products from API
+  const {
+    data: products = [],
+    isLoading: isLoadingProducts,
+    error: productsError
+  } = useQuery<Product[]>({ 
+    queryKey: ['/api/pos/products'],
+    queryFn: async () => {
+      const res = await fetch('/api/pos/products');
+      if (!res.ok) throw new Error('Failed to load products');
+      return res.json();
+    }
+  });
+  
+  // Fetch customers from API
+  const {
+    data: customers = [],
+    isLoading: isLoadingCustomers,
+    error: customersError
+  } = useQuery<Customer[]>({ 
+    queryKey: ['/api/pos/customers'],
+    queryFn: async () => {
+      const res = await fetch('/api/pos/customers');
+      if (!res.ok) throw new Error('Failed to load customers');
+      return res.json();
+    }
+  });
+  
+  // Create payment intent mutation
+  const createPaymentIntentMutation = useMutation({
+    mutationFn: async ({ amount, items, customerId }: { amount: number, items: CartItem[], customerId?: number }) => {
+      const res = await apiRequest("POST", "/api/pos/create-payment-intent", {
+        amount,
+        items,
+        customerId,
+      });
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setPaymentIntentId(data.paymentIntentId);
+      // In a real Stripe integration, we would use the clientSecret to confirm payment
+      // For this simulation, we'll just proceed to the next step
+      setCheckoutStage("receipt");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Payment failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Record payment mutation
+  const recordPaymentMutation = useMutation({
+    mutationFn: async ({ 
+      paymentIntentId, 
+      customerId, 
+      amount, 
+      items, 
+      paymentMethod 
+    }: { 
+      paymentIntentId?: string, 
+      customerId?: number, 
+      amount: number, 
+      items: CartItem[], 
+      paymentMethod: string 
+    }) => {
+      const res = await apiRequest("POST", "/api/pos/record-payment", {
+        paymentIntentId,
+        customerId,
+        amount,
+        items,
+        paymentMethod,
+        status: "completed"
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Payment recorded",
+        description: `Your transaction of $${getFinalTotal().toFixed(2)} has been completed.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to record payment",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Filter products based on search query
+  const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const addToCart = (product: typeof sampleProducts[0]) => {
+  const addToCart = (product: Product) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
       
@@ -133,26 +230,38 @@ export const PosTile = () => {
     }
     
     if (checkoutStage === "payment") {
-      setCheckoutStage("receipt");
+      // Process payment via Stripe in a real implementation
+      // For this version, we'll just create a payment intent via our API
+      createPaymentIntentMutation.mutate({
+        amount: getFinalTotal(),
+        items: cart,
+        customerId: selectedCustomer || undefined
+      });
       return;
     }
     
-    // Reset everything when done
-    toast({
-      title: "Sale completed successfully",
-      description: `Payment of $${getFinalTotal().toFixed(2)} processed with ${paymentMethod}.`,
-      variant: "success"
-    });
-    
-    setCart([]);
-    setSearchQuery("");
-    setSelectedCustomer(null);
-    setDiscount(0);
-    setApplyDiscount(false);
-    setTip(0);
-    setCheckoutStage("cart");
-    setPaymentMethod("credit");
-    setIsOpen(false);
+    // If we're at the receipt stage, record the payment and reset
+    if (checkoutStage === "receipt") {
+      recordPaymentMutation.mutate({
+        paymentIntentId: paymentIntentId || undefined,
+        customerId: selectedCustomer || undefined,
+        amount: getFinalTotal(),
+        items: cart,
+        paymentMethod
+      });
+      
+      // Reset everything when done
+      setCart([]);
+      setSearchQuery("");
+      setSelectedCustomer(null);
+      setDiscount(0);
+      setApplyDiscount(false);
+      setTip(0);
+      setCheckoutStage("cart");
+      setPaymentMethod("credit");
+      setPaymentIntentId(null);
+      setIsOpen(false);
+    }
   };
   
   const handleBack = () => {
@@ -169,10 +278,12 @@ export const PosTile = () => {
   
   const getSelectedCustomer = () => {
     if (!selectedCustomer) return null;
-    return sampleCustomers.find(c => c.id === selectedCustomer) || null;
+    return customers.find(c => c.id === selectedCustomer) || null;
   };
   
   const renderActionButton = () => {
+    const isLoading = createPaymentIntentMutation.isPending || recordPaymentMutation.isPending;
+    
     switch (checkoutStage) {
       case "cart":
         return (
@@ -193,9 +304,14 @@ export const PosTile = () => {
             className="w-full" 
             size="lg"
             onClick={handleCheckout}
+            disabled={isLoading}
           >
-            <Check className="mr-2 h-5 w-5" />
-            Complete Sale
+            {isLoading ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <Check className="mr-2 h-5 w-5" />
+            )}
+            {isLoading ? "Processing..." : "Complete Sale"}
           </Button>
         );
         
@@ -206,9 +322,14 @@ export const PosTile = () => {
             size="lg"
             onClick={handleCheckout}
             variant="default"
+            disabled={isLoading}
           >
-            <Check className="mr-2 h-5 w-5" />
-            Done
+            {isLoading ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <Check className="mr-2 h-5 w-5" />
+            )}
+            {isLoading ? "Recording payment..." : "Done"}
           </Button>
         );
     }
@@ -231,13 +352,16 @@ export const PosTile = () => {
                 />
               </div>
               
-              <Select value={selectedCustomer?.toString() || ""} onValueChange={(value) => setSelectedCustomer(parseInt(value) || null)}>
+              <Select 
+                value={selectedCustomer?.toString() || ""} 
+                onValueChange={(value) => setSelectedCustomer(value ? parseInt(value) : null)}
+              >
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">No customer</SelectItem>
-                  {sampleCustomers.map(customer => (
+                  {customers.map((customer) => (
                     <SelectItem key={customer.id} value={customer.id.toString()}>
                       {customer.name}
                     </SelectItem>
@@ -246,51 +370,30 @@ export const PosTile = () => {
               </Select>
             </div>
             
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="w-full justify-start mb-4">
-                <TabsTrigger value="all">All Items</TabsTrigger>
-                <TabsTrigger value="service">Services</TabsTrigger>
-                <TabsTrigger value="product">Products</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="all" className="mt-0">
-                <ScrollArea className="h-[430px]">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {filteredProducts.map((product) => (
-                      <Card 
-                        key={product.id} 
-                        className="cursor-pointer hover:bg-accent/10 transition-colors"
-                        onClick={() => addToCart(product)}
-                      >
-                        <CardHeader className="p-4 pb-2">
-                          <div className="flex justify-between mb-1">
-                            <Badge variant={product.category === "service" ? "secondary" : "outline"}>
-                              {product.category === "service" ? "Service" : "Product"}
-                            </Badge>
-                            <span className="font-bold text-primary">${product.price}</span>
-                          </div>
-                          <CardTitle className="text-base">{product.name}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="px-4 py-2">
-                          <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
-                        </CardContent>
-                        <CardFooter className="p-4 pt-2 flex justify-end">
-                          <Button size="sm" variant="ghost" className="h-8 px-2">
-                            <Plus className="h-4 w-4" /> Add
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-              
-              <TabsContent value="service" className="mt-0">
-                <ScrollArea className="h-[430px]">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {filteredProducts
-                      .filter(p => p.category === "service")
-                      .map((product) => (
+            {isLoadingProducts ? (
+              <div className="flex items-center justify-center h-[430px]">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              </div>
+            ) : productsError ? (
+              <div className="flex flex-col items-center justify-center h-[430px] text-center p-4">
+                <X className="h-10 w-10 text-destructive mb-2" />
+                <p className="text-destructive font-medium">Error loading products</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Please try again later
+                </p>
+              </div>
+            ) : (
+              <Tabs defaultValue="all" className="w-full">
+                <TabsList className="w-full justify-start mb-4">
+                  <TabsTrigger value="all">All Items</TabsTrigger>
+                  <TabsTrigger value="service">Services</TabsTrigger>
+                  <TabsTrigger value="product">Products</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="all" className="mt-0">
+                  <ScrollArea className="h-[430px]">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {filteredProducts.map((product) => (
                         <Card 
                           key={product.id} 
                           className="cursor-pointer hover:bg-accent/10 transition-colors"
@@ -298,7 +401,9 @@ export const PosTile = () => {
                         >
                           <CardHeader className="p-4 pb-2">
                             <div className="flex justify-between mb-1">
-                              <Badge variant="secondary">Service</Badge>
+                              <Badge variant={product.category === "service" ? "secondary" : "outline"}>
+                                {product.category === "service" ? "Service" : "Product"}
+                              </Badge>
                               <span className="font-bold text-primary">${product.price}</span>
                             </div>
                             <CardTitle className="text-base">{product.name}</CardTitle>
@@ -313,42 +418,75 @@ export const PosTile = () => {
                           </CardFooter>
                         </Card>
                       ))}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-              
-              <TabsContent value="product" className="mt-0">
-                <ScrollArea className="h-[430px]">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {filteredProducts
-                      .filter(p => p.category === "product")
-                      .map((product) => (
-                        <Card 
-                          key={product.id} 
-                          className="cursor-pointer hover:bg-accent/10 transition-colors"
-                          onClick={() => addToCart(product)}
-                        >
-                          <CardHeader className="p-4 pb-2">
-                            <div className="flex justify-between mb-1">
-                              <Badge variant="outline">Product</Badge>
-                              <span className="font-bold text-primary">${product.price}</span>
-                            </div>
-                            <CardTitle className="text-base">{product.name}</CardTitle>
-                          </CardHeader>
-                          <CardContent className="px-4 py-2">
-                            <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
-                          </CardContent>
-                          <CardFooter className="p-4 pt-2 flex justify-end">
-                            <Button size="sm" variant="ghost" className="h-8 px-2">
-                              <Plus className="h-4 w-4" /> Add
-                            </Button>
-                          </CardFooter>
-                        </Card>
-                      ))}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-            </Tabs>
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+                
+                <TabsContent value="service" className="mt-0">
+                  <ScrollArea className="h-[430px]">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {filteredProducts
+                        .filter((p) => p.category === "service")
+                        .map((product) => (
+                          <Card 
+                            key={product.id} 
+                            className="cursor-pointer hover:bg-accent/10 transition-colors"
+                            onClick={() => addToCart(product)}
+                          >
+                            <CardHeader className="p-4 pb-2">
+                              <div className="flex justify-between mb-1">
+                                <Badge variant="secondary">Service</Badge>
+                                <span className="font-bold text-primary">${product.price}</span>
+                              </div>
+                              <CardTitle className="text-base">{product.name}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-4 py-2">
+                              <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+                            </CardContent>
+                            <CardFooter className="p-4 pt-2 flex justify-end">
+                              <Button size="sm" variant="ghost" className="h-8 px-2">
+                                <Plus className="h-4 w-4" /> Add
+                              </Button>
+                            </CardFooter>
+                          </Card>
+                        ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+                
+                <TabsContent value="product" className="mt-0">
+                  <ScrollArea className="h-[430px]">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {filteredProducts
+                        .filter((p) => p.category === "product")
+                        .map((product) => (
+                          <Card 
+                            key={product.id} 
+                            className="cursor-pointer hover:bg-accent/10 transition-colors"
+                            onClick={() => addToCart(product)}
+                          >
+                            <CardHeader className="p-4 pb-2">
+                              <div className="flex justify-between mb-1">
+                                <Badge variant="outline">Product</Badge>
+                                <span className="font-bold text-primary">${product.price}</span>
+                              </div>
+                              <CardTitle className="text-base">{product.name}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-4 py-2">
+                              <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+                            </CardContent>
+                            <CardFooter className="p-4 pt-2 flex justify-end">
+                              <Button size="sm" variant="ghost" className="h-8 px-2">
+                                <Plus className="h-4 w-4" /> Add
+                              </Button>
+                            </CardFooter>
+                          </Card>
+                        ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
+            )}
           </div>
         );
         
@@ -529,7 +667,7 @@ export const PosTile = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between py-1 border-b">
                   <span className="text-muted-foreground">Transaction ID:</span>
-                  <span className="font-medium">TX-{Date.now().toString().substring(5, 13)}</span>
+                  <span className="font-medium">{paymentIntentId || `TX-${Date.now().toString().substring(5, 13)}`}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b">
                   <span className="text-muted-foreground">Date & Time:</span>
@@ -580,7 +718,7 @@ export const PosTile = () => {
             
             <div className="flex flex-col items-center gap-2 mt-6 text-center">
               <p className="text-muted-foreground">Thank you for your business!</p>
-              {getSelectedCustomer() && (
+              {getSelectedCustomer()?.email && (
                 <Button variant="outline" size="sm">
                   Email Receipt to {getSelectedCustomer()?.email}
                 </Button>
@@ -611,7 +749,7 @@ export const PosTile = () => {
                 </Button>
                 <div className="flex flex-col items-end">
                   <span className="text-xs text-white/80">Products in stock</span>
-                  <span className="text-xl font-semibold text-white">8</span>
+                  <span className="text-xl font-semibold text-white">{products.length}</span>
                 </div>
               </div>
             </div>
