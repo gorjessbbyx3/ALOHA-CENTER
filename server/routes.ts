@@ -69,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let dbStatus = "unknown";
       try {
         // Try a simple database query to verify connection
-        await db.select({ count: db.fn.count() }).from(users);
+        await db.select().from(users).limit(1);
         dbStatus = "connected";
       } catch (dbError) {
         console.error("Database health check failed:", dbError);

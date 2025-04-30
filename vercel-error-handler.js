@@ -1,93 +1,104 @@
 /**
  * Vercel Error Handler
  * 
- * This script is used for error handling in Vercel deployments.
- * It transforms various errors into proper responses with appropriate status codes.
+ * This script contains specialized error handling for Vercel deployments.
+ * It's designed to catch common Vercel-specific errors and provide helpful
+ * diagnostic information for troubleshooting.
  */
 
 const fs = require('fs');
 const path = require('path');
 
 /**
- * Custom error handler middleware for Vercel deployments
+ * Adds Vercel-specific error handling to an Express app
+ * 
+ * @param {Express} app - The Express application instance
  */
-function vercelErrorHandler(err, req, res, next) {
-  console.error('Vercel Error:', err);
-
-  // Error mapping based on common Vercel error patterns
-  if (err.code === 'ENOENT' && err.syscall === 'open') {
-    return res.status(404).json({
-      error: 'NOT_FOUND',
-      message: 'The requested resource was not found',
-      path: req.path
-    });
-  }
-
-  if (err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT') {
-    return res.status(504).json({
-      error: 'FUNCTION_INVOCATION_TIMEOUT',
-      message: 'The request timed out',
-      path: req.path
-    });
-  }
-
-  if (err.name === 'PayloadTooLargeError') {
-    return res.status(413).json({
-      error: 'FUNCTION_PAYLOAD_TOO_LARGE',
-      message: 'The request payload is too large',
-      path: req.path
-    });
-  }
-
-  if (err.message && err.message.includes('database')) {
-    return res.status(500).json({
-      error: 'FUNCTION_INVOCATION_FAILED',
-      message: 'Database connection error',
-      path: req.path,
-      details: 'Check your DATABASE_URL environment variable'
-    });
-  }
-
-  // Generic error response
-  return res.status(500).json({
-    error: 'INTERNAL_SERVER_ERROR',
-    message: 'An unexpected error occurred',
-    path: req.path
-  });
-}
-
-/**
- * Redirect to our custom error page instead of Vercel's default error page
- */
-function handleVercelErrors(app) {
-  // Register the custom error handler
-  app.use(vercelErrorHandler);
-
-  // Define a catch-all route for 404 errors
-  app.use('*', (req, res) => {
-    // First check if it's an API request
-    if (req.path.startsWith('/api/')) {
-      return res.status(404).json({
-        error: 'API_ROUTE_NOT_FOUND',
-        message: `The API route ${req.path} does not exist`,
-      });
-    }
-
-    // For non-API routes in production, serve the index.html
-    if (process.env.NODE_ENV === 'production') {
-      try {
-        const indexPath = path.join(__dirname, 'dist', 'client', 'index.html');
-        if (fs.existsSync(indexPath)) {
-          return res.sendFile(indexPath);
-        }
-      } catch (err) {
-        console.error('Error serving index.html:', err);
+function setupVercelErrorHandler(app) {
+  // Add Vercel-specific request logging middleware
+  app.use((req, res, next) => {
+    const isVercel = process.env.VERCEL === '1';
+    if (isVercel) {
+      console.log(`[Vercel] ${req.method} ${req.url}`);
+      // Log Vercel-specific headers that can help with debugging
+      const vercelHeaders = Object.keys(req.headers)
+        .filter(h => h.startsWith('x-vercel') || h.startsWith('x-forwarded'))
+        .reduce((obj, key) => {
+          obj[key] = req.headers[key];
+          return obj;
+        }, {});
+      
+      if (Object.keys(vercelHeaders).length > 0) {
+        console.log('[Vercel Headers]', JSON.stringify(vercelHeaders));
       }
     }
+    next();
+  });
 
-    // If we couldn't find or serve index.html, serve a basic 404
-    res.status(404).send('Not Found');
+  // Handle 404 errors specially for Vercel
+  app.use((req, res, next) => {
+    // Only handle HTML requests that haven't found a route
+    if (req.headers.accept && req.headers.accept.includes('text/html')) {
+      const errorID = req.headers['x-vercel-id'] || 'unknown';
+      
+      // Check if 404.html exists
+      const custom404Path = path.join(__dirname, '404.html');
+      if (fs.existsSync(custom404Path)) {
+        const content = fs.readFileSync(custom404Path, 'utf8')
+          .replace('Unknown', errorID)
+          .replace('NOT_FOUND', 'NOT_FOUND');
+        
+        return res.status(404).send(content);
+      }
+      
+      // Fallback to a simple 404 message
+      return res.status(404).send(`
+        <html>
+          <head><title>404 - Not Found</title></head>
+          <body>
+            <h1>404 - Page Not Found</h1>
+            <p>The requested URL ${req.url} was not found on this server.</p>
+            <p>Error ID: ${errorID}</p>
+            <p><a href="/">Return to homepage</a></p>
+          </body>
+        </html>
+      `);
+    }
+    next();
+  });
+
+  // Add specialized error handler for common Vercel deployment issues
+  app.use((err, req, res, next) => {
+    console.error('[Vercel Error]', err);
+    
+    // Check for specific Vercel errors
+    if (err.code === 'FUNCTION_INVOCATION_FAILED') {
+      return res.status(500).json({
+        error: 'FUNCTION_INVOCATION_FAILED',
+        message: 'The serverless function failed to execute. This could be due to missing environment variables or incorrect configuration.',
+        resolutionSteps: [
+          'Check your environment variables in Vercel dashboard',
+          'Verify that any required API keys are set',
+          'Check if the database connection string is correct',
+          'Review server logs in Vercel dashboard'
+        ]
+      });
+    }
+    
+    if (err.code === 'EDGE_FUNCTION_INVOCATION_TIMEOUT') {
+      return res.status(504).json({
+        error: 'EDGE_FUNCTION_INVOCATION_TIMEOUT',
+        message: 'The function execution time exceeded the limit. This is often caused by slow database queries or external API calls.',
+        resolutionSteps: [
+          'Optimize your database queries',
+          'Consider using caching for expensive operations',
+          'Check if external API calls are timing out'
+        ]
+      });
+    }
+    
+    next(err);
   });
 }
 
-module.exports = { vercelErrorHandler, handleVercelErrors };
+module.exports = { setupVercelErrorHandler };

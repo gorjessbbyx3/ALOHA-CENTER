@@ -43,16 +43,18 @@ app.use((req, res, next) => {
   if (process.env.VERCEL === '1') {
     try {
       // Dynamic import to avoid TypeScript errors
-      const { vercelErrorHandler } = require('../vercel-error-handler');
-      app.use(vercelErrorHandler);
-    } catch (e) {
-      console.warn('Vercel error handler not available, using default');
+      const { setupVercelErrorHandler } = require('../vercel-error-handler');
+      setupVercelErrorHandler(app);
+      console.log('Vercel error handler initialized');
+    } catch (e: any) {
+      console.warn('Vercel error handler not available, using default:', e.message);
       app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
         const status = err.status || err.statusCode || 500;
         const message = err.message || "Internal Server Error";
     
         res.status(status).json({ message });
-        throw err;
+        console.error('[Server Error]', err);
+        _next(err);
       });
     }
   } else {

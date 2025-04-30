@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "framework": "vite",
+  "buildCommand": "node vercel-build.js",
+  "outputDirectory": "dist",
   "builds": [
     {
       "src": "vercel-build.js",
@@ -37,6 +40,10 @@
     {
       "src": "/(.*\\.(png|jpg|jpeg|gif|ico|svg))",
       "dest": "/$1"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
     },
     {
       "handle": "filesystem"
