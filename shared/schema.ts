@@ -97,19 +97,24 @@ export const appointments = pgTable("appointments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertAppointmentSchema = createInsertSchema(appointments).pick({
-  patientId: true,
-  serviceId: true,
-  roomId: true,
-  date: true,
-  time: true,
-  duration: true,
-  status: true,
-  notes: true,
-  paymentStatus: true,
-  paymentAmount: true,
-  paymentMethod: true,
-});
+export const insertAppointmentSchema = createInsertSchema(appointments)
+  .pick({
+    patientId: true,
+    serviceId: true,
+    roomId: true,
+    date: true,
+    time: true,
+    duration: true,
+    status: true,
+    notes: true,
+    paymentStatus: true,
+    paymentAmount: true,
+    paymentMethod: true,
+  })
+  .extend({
+    // Allow either Date object or ISO string for the date field
+    date: z.union([z.date(), z.string().transform(str => new Date(str))])
+  });
 
 // Payment schema
 export const payments = pgTable("payments", {
