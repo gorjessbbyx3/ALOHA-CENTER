@@ -38,38 +38,53 @@ export default function Dashboard() {
       <div className="py-2">
         <h2 className="text-gray-500 mb-4">Welcome to your Admin dashboard</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {/* First Row */}
+        {/* Top 2x2 Grid */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
           <DashboardCard
             title="Appointment Book"
             value=""
             icon={<Clock size={48}/>}
-            className="bg-primary col-span-1 md:col-span-1 h-44 md:h-48"
+            className="bg-primary h-44 md:h-48"
             iconPosition="top"
             onClick={() => {
-              // Use the browser's history API which is more reliable 
               window.location.assign("/appointments");
             }}
           />
           
           <ManageTile />
+        </div>
+        
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* POS Tile - takes up 2 columns */}
+          <div className="col-span-1 md:col-span-1 lg:col-span-2">
+            <PosTile />
+          </div>
           
-          {/* POS Tile - takes up 2 columns in md/lg screens */}
-          <PosTile />
+          {/* Menu Tile */}
+          <div className="col-span-1 md:col-span-1 lg:col-span-2">
+            <MenuTile />
+          </div>
           
-          <MenuTile />
-          
-          {/* Second Row - Upcoming Appointments */}
-          <UpcomingAppointmentsTile />
+          {/* Upcoming Appointments */}
+          <div className="col-span-1 md:col-span-1 lg:col-span-2">
+            <UpcomingAppointmentsTile />
+          </div>
           
           {/* Analytics Tile */}
-          <AnalyticsTile />
+          <div className="col-span-1 md:col-span-1 lg:col-span-2">
+            <AnalyticsTile />
+          </div>
           
-          {/* Third Row */}
-          <StickyNotesTile />
+          {/* Sticky Notes */}
+          <div className="col-span-1 md:col-span-1 lg:col-span-2">
+            <StickyNotesTile />
+          </div>
           
           {/* Date & Time Tile */}
-          <DateTimeTile />
+          <div className="col-span-1 md:col-span-1 lg:col-span-2">
+            <DateTimeTile />
+          </div>
         </div>
       </div>
       
