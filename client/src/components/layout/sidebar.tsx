@@ -14,7 +14,7 @@ export function Sidebar({ className }: SidebarProps) {
 
   return (
     <div className={cn("hidden md:flex md:flex-shrink-0", className)}>
-      <div className="flex flex-col w-64">
+      <div className="flex flex-col w-72">
         <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-sidebar-background border-r border-sidebar-border">
           {/* Meevo Logo */}
           <div className="flex items-center flex-shrink-0 px-4 mb-5">
@@ -24,55 +24,47 @@ export function Sidebar({ className }: SidebarProps) {
           
           {/* Top Navigation with colored backgrounds */}
           <div className="px-4 space-y-2 mb-6">
-            <div className="flex space-x-1">
-              <div className="flex-1">
-                <Link href="/">
-                  <div className={cn(
-                    "flex items-center justify-center px-2 py-2 text-sm font-bold rounded-md border-2",
-                    isActive("/") 
-                      ? "bg-primary text-white border-white" 
-                      : "bg-blue-600 text-white hover:bg-blue-500 border-white"
-                  )}>
-                    Home
-                  </div>
-                </Link>
-              </div>
-              <div className="flex-1">
-                <Link href="/appointments">
-                  <div className={cn(
-                    "flex items-center justify-center px-2 py-2 text-sm font-bold rounded-md border-2",
-                    isActive("/appointments") 
-                      ? "bg-primary text-white border-white" 
-                      : "bg-blue-600 text-white hover:bg-blue-500 border-white"
-                  )}>
-                    Register
-                  </div>
-                </Link>
-              </div>
-              <div className="flex-1">
-                <Link href="/services">
-                  <div className={cn(
-                    "flex items-center justify-center px-2 py-2 text-sm font-bold rounded-md border-2",
-                    isActive("/services") 
-                      ? "bg-primary text-white border-white" 
-                      : "bg-blue-600 text-white hover:bg-blue-500 border-white"
-                  )}>
-                    Products
-                  </div>
-                </Link>
-              </div>
-              <div className="flex-1">
-                <Link href="/reports">
-                  <div className={cn(
-                    "flex items-center justify-center px-1 py-2 text-sm font-bold rounded-md border-2",
-                    isActive("/reports") 
-                      ? "bg-primary text-white border-white" 
-                      : "bg-blue-600 text-white hover:bg-blue-500 border-white"
-                  )}>
-                    Reports
-                  </div>
-                </Link>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Link href="/">
+                <div className={cn(
+                  "flex items-center justify-center px-3 py-2 text-sm font-bold rounded-md border-2",
+                  isActive("/") 
+                    ? "bg-primary text-white border-white" 
+                    : "bg-blue-600 text-white hover:bg-blue-500 border-white"
+                )}>
+                  Home
+                </div>
+              </Link>
+              <Link href="/appointments">
+                <div className={cn(
+                  "flex items-center justify-center px-3 py-2 text-sm font-bold rounded-md border-2",
+                  isActive("/appointments") 
+                    ? "bg-primary text-white border-white" 
+                    : "bg-blue-600 text-white hover:bg-blue-500 border-white"
+                )}>
+                  Register
+                </div>
+              </Link>
+              <Link href="/services">
+                <div className={cn(
+                  "flex items-center justify-center px-3 py-2 text-sm font-bold rounded-md border-2",
+                  isActive("/services") 
+                    ? "bg-primary text-white border-white" 
+                    : "bg-blue-600 text-white hover:bg-blue-500 border-white"
+                )}>
+                  Products
+                </div>
+              </Link>
+              <Link href="/reports">
+                <div className={cn(
+                  "flex items-center justify-center px-3 py-2 text-sm font-bold rounded-md border-2",
+                  isActive("/reports") 
+                    ? "bg-primary text-white border-white" 
+                    : "bg-blue-600 text-white hover:bg-blue-500 border-white"
+                )}>
+                  Reports
+                </div>
+              </Link>
             </div>
           </div>
           
