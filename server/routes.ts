@@ -63,8 +63,36 @@ async function seedInitialData() {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint for Vercel deployment
-  app.get("/api/health-check", (req, res) => {
-    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  app.get("/api/health-check", async (req, res) => {
+    try {
+      // Check database connection by fetching a count
+      let dbStatus = "unknown";
+      try {
+        // Try a simple database query to verify connection
+        await db.select({ count: db.fn.count() }).from(users);
+        dbStatus = "connected";
+      } catch (dbError) {
+        console.error("Database health check failed:", dbError);
+        dbStatus = "error";
+      }
+
+      // Basic environment diagnostics
+      res.status(200).json({ 
+        status: "ok", 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        version: process.env.npm_package_version || "1.0.0",
+        database: dbStatus,
+        stripe: stripe ? "configured" : "not configured",
+        deployment: "vercel",
+        path: req.path,
+        host: req.headers.host,
+        reqId: req.headers['x-vercel-id'] || 'local'
+      });
+    } catch (error) {
+      console.error("Health check error:", error);
+      res.status(500).json({ status: "error", message: "Health check failed" });
+    }
   });
   // Seed initial rooms
   try {

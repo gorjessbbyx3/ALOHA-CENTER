@@ -77,6 +77,46 @@ try {
     }
   }
   
+  // Copy needed static files to the dist directory for Vercel
+  console.log('\n📂 Ensuring static files are available...');
+  try {
+    // Make sure client/dist exists in the dist directory
+    const clientDistSrc = path.join(__dirname, 'dist', 'client');
+    if (fs.existsSync(clientDistSrc)) {
+      // List and copy all assets
+      const listAllFiles = (dir) => {
+        return fs.readdirSync(dir).reduce((files, file) => {
+          const name = path.join(dir, file);
+          const isDirectory = fs.statSync(name).isDirectory();
+          return isDirectory ? [...files, ...listAllFiles(name)] : [...files, name];
+        }, []);
+      };
+
+      const copyFilesToRoot = (dir, destDir) => {
+        const files = listAllFiles(dir);
+        files.forEach(file => {
+          const relativePath = path.relative(dir, file);
+          const destPath = path.join(destDir, relativePath);
+          
+          // Create directories if they don't exist
+          const destDirName = path.dirname(destPath);
+          if (!fs.existsSync(destDirName)) {
+            fs.mkdirSync(destDirName, { recursive: true });
+          }
+          
+          // Copy the file
+          fs.copyFileSync(file, destPath);
+        });
+      };
+      
+      // Copy all assets from client/dist to the root of dist
+      copyFilesToRoot(clientDistSrc, path.join(__dirname, 'dist'));
+      console.log('✅ Static assets copied to dist directory');
+    }
+  } catch (error) {
+    console.warn('Warning: Error copying static files:', error.message);
+  }
+  
   // Verify the build
   if (fs.existsSync(path.join(__dirname, 'dist'))) {
     console.log('\n✅ Build completed successfully!');
