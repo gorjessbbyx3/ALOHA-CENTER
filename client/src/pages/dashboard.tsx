@@ -38,52 +38,88 @@ export default function Dashboard() {
       <div className="py-2">
         <h2 className="text-gray-500 mb-4">Welcome to your Admin dashboard</h2>
         
-        {/* Top 2x2 Grid */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <DashboardCard
-            title="Appointment Book"
-            value=""
-            icon={<Clock size={48}/>}
-            className="bg-primary h-44 md:h-48"
-            iconPosition="top"
-            onClick={() => {
-              window.location.assign("/appointments");
-            }}
-          />
-          
-          <ManageTile />
-        </div>
-        
         {/* Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* POS Tile - takes up 2 columns */}
-          <div className="col-span-1 md:col-span-1 lg:col-span-2">
-            <PosTile />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Top Row - 2 large tiles */}
+          <div className="bg-cyan-500 text-white rounded-md p-6 flex flex-col items-center justify-center min-h-[200px]">
+            <Clock size={64} className="mb-4" />
+            <h3 className="text-xl font-bold mb-1">Appointment Book</h3>
+            <p className="text-sm mb-4">Schedule and manage appointments</p>
+            <button 
+              className="bg-white text-cyan-500 px-4 py-2 rounded-md hover:bg-cyan-50 transition-colors"
+              onClick={() => window.location.assign("/appointments")}
+            >
+              Open Book
+            </button>
           </div>
           
-          {/* Menu Tile */}
-          <div className="col-span-1 md:col-span-1 lg:col-span-2">
-            <MenuTile />
+          <div className="bg-indigo-500 text-white rounded-md p-6 flex flex-col items-center justify-center min-h-[200px]">
+            <svg className="h-16 w-16 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <h3 className="text-xl font-bold mb-1">Management</h3>
+            <p className="text-sm mb-4">Configure and manage clinic settings</p>
+            <button 
+              className="bg-white text-indigo-500 px-4 py-2 rounded-md hover:bg-indigo-50 transition-colors"
+              onClick={() => document.getElementById('manage-dialog-trigger')?.click()}
+            >
+              Manage
+            </button>
+            <div className="hidden">
+              <ManageTile />
+            </div>
           </div>
           
-          {/* Upcoming Appointments */}
-          <div className="col-span-1 md:col-span-1 lg:col-span-2">
-            <UpcomingAppointmentsTile />
+          {/* Second Row - POS and Menu */}
+          <div className="bg-teal-500 text-white rounded-md p-6 flex flex-col items-center justify-center min-h-[200px]">
+            <svg className="h-16 w-16 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            <h3 className="text-xl font-bold mb-1">Point of Sale</h3>
+            <p className="text-sm mb-4">Process payments & sell products</p>
+            <button 
+              className="bg-white text-teal-500 px-4 py-2 rounded-md hover:bg-teal-50 transition-colors"
+              onClick={() => document.getElementById('pos-dialog-trigger')?.click()}
+            >
+              Open POS
+            </button>
+            <div className="hidden">
+              <PosTile />
+            </div>
           </div>
           
-          {/* Analytics Tile */}
-          <div className="col-span-1 md:col-span-1 lg:col-span-2">
-            <AnalyticsTile />
+          <div className="bg-blue-500 text-white rounded-md p-6 flex flex-col items-center justify-center min-h-[200px]">
+            <svg className="h-16 w-16 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <h3 className="text-xl font-bold mb-1">Services Menu</h3>
+            <p className="text-sm mb-4">View and manage service offerings</p>
+            <button 
+              className="bg-white text-blue-500 px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"
+              onClick={() => document.getElementById('menu-dialog-trigger')?.click()}
+            >
+              View Menu
+            </button>
+            <div className="hidden">
+              <MenuTile />
+            </div>
           </div>
           
-          {/* Sticky Notes */}
-          <div className="col-span-1 md:col-span-1 lg:col-span-2">
-            <StickyNotesTile />
-          </div>
-          
-          {/* Date & Time Tile */}
-          <div className="col-span-1 md:col-span-1 lg:col-span-2">
-            <DateTimeTile />
+          {/* Bottom Row */}
+          <div className="col-span-1 md:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <UpcomingAppointmentsTile />
+              <AnalyticsTile />
+              <StickyNotesTile />
+              <DateTimeTile />
+            </div>
           </div>
         </div>
       </div>
