@@ -414,10 +414,5 @@ export type Appointment = {
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
 
-export const extendedInsertPaymentSchema = insertPaymentSchema.extend({
-  // Allow number for amount (will be converted to string)
-  amount: z.union([z.string(), z.number().transform(n => n.toString())])
-});
-
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 export type Activity = typeof activities.$inferSelect;
