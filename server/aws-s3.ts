@@ -5,9 +5,15 @@ import { config } from './config';
 import fs from 'fs';
 import path from 'path';
 
-// Initialize S3 client
+// Initialize S3 client with more explicit configuration
 const s3Client = new S3Client({
-  region: config.aws.region
+  region: config.aws.region,
+  credentials: process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+    ? {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      }
+    : undefined
 });
 
 const bucketName = config.aws.s3Bucket;
@@ -151,6 +157,12 @@ export async function listFiles(prefix: string): Promise<string[]> {
 
 // Check S3 connection
 export async function checkS3Connection(): Promise<boolean> {
+  // Skip S3 check if AWS credentials are not provided
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    console.log('AWS credentials not found. S3 functionality will be disabled.');
+    return false;
+  }
+
   try {
     const command = new ListObjectsV2Command({
       Bucket: bucketName,
