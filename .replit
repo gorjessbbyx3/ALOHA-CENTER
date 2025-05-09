@@ -248,6 +248,24 @@ mode = "sequential"
 task = "shell.exec"
 args = "node --import tsx test-db-connection.js"
 
+[[workflows.workflow]]
+name = "Test RDS Proxy Connection"
+author = 42094346
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "USE_RDS_PROXY=true DB_PROXY_ENDPOINT=replit.proxy-cshguag6ii9q.us-east-1.rds.amazonaws.com DB_USERNAME=postgres DB_PASSWORD=Camputer69! npm run test:proxy"
+
+[[workflows.workflow]]
+name = "Run App with RDS Proxy"
+author = 42094346
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development USE_RDS_PROXY=true DB_PROXY_ENDPOINT=replit.proxy-cshguag6ii9q.us-east-1.rds.amazonaws.com DB_PORT=5432 DB_NAME=clinic_management DB_USERNAME=postgres DB_PASSWORD=Camputer69! npm run dev"
+
 [[ports]]
 localPort = 5000
 externalPort = 80

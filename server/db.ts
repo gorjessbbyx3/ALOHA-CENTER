@@ -11,6 +11,9 @@ const dbType = process.env.DB_TYPE || 'memory';
 
 console.log(`Using database type: ${dbType}`);
 
+// Check if using RDS Proxy
+const useRdsProxy = process.env.USE_RDS_PROXY === 'true';
+
 // Define variables with proper initialization
 let pool;
 let db;
@@ -35,12 +38,28 @@ if (dbType === 'memory' || dbType === DatabaseType.MEMORY) {
   console.log('Using PostgreSQL database');
   
   try {
-    // Get database credentials from environment variables
-    const dbHost = process.env.DB_ENDPOINT || 'database-alohacenter.cshguag6ii9q.us-east-1.rds.amazonaws.com';
-    const dbPort = Number(process.env.DB_PORT || '5432');
-    const dbName = process.env.DB_NAME || 'clinic_management';
-    const dbUser = process.env.DB_USERNAME || 'postgres';
-    const dbPassword = process.env.DB_PASSWORD;
+    let dbHost, dbPort, dbName, dbUser, dbPassword, sslConfig;
+    
+    // Determine connection details based on whether we're using RDS Proxy
+    if (useRdsProxy) {
+      // RDS Proxy connection
+      dbHost = process.env.DB_PROXY_ENDPOINT || 'replit.proxy-cshguag6ii9q.us-east-1.rds.amazonaws.com';
+      dbPort = Number(process.env.DB_PROXY_PORT || '5432');
+      dbName = process.env.DB_NAME || 'clinic_management';
+      dbUser = process.env.DB_USERNAME || 'postgres';
+      dbPassword = process.env.DB_PASSWORD;
+      sslConfig = true; // RDS Proxy requires SSL
+      
+      console.log('Using RDS Proxy endpoint for connection');
+    } else {
+      // Direct RDS connection
+      dbHost = process.env.DB_ENDPOINT || 'database-alohacenter.cshguag6ii9q.us-east-1.rds.amazonaws.com';
+      dbPort = Number(process.env.DB_PORT || '5432');
+      dbName = process.env.DB_NAME || 'clinic_management';
+      dbUser = process.env.DB_USERNAME || 'postgres';
+      dbPassword = process.env.DB_PASSWORD;
+      sslConfig = { rejectUnauthorized: false };
+    }
 
     // Check if database credentials are available
     if (!dbPassword) {
@@ -55,9 +74,11 @@ if (dbType === 'memory' || dbType === DatabaseType.MEMORY) {
       database: dbName,
       user: dbUser,
       password: dbPassword,
-      ssl: {
-        rejectUnauthorized: false
-      }
+      ssl: sslConfig,
+      // RDS Proxy recommended settings
+      connectionTimeoutMillis: 15000,
+      idleTimeoutMillis: 30000 * 60, // Match the 30 minute proxy timeout
+      max: 10 // Limit connections
     });
 
     // Initialize Drizzle ORM with connection pool

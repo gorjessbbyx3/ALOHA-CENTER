@@ -25,8 +25,9 @@ const rdsDataClient = new RDSDataClient({
 // Settings for connecting to the database
 const DB_INSTANCE_IDENTIFIER = process.env.DB_INSTANCE_IDENTIFIER;
 const DB_NAME = process.env.DB_NAME || 'clinic_management';
-const DB_SECRET_ARN = process.env.DB_SECRET_ARN;
+const DB_SECRET_ARN = process.env.DB_SECRET_ARN || 'arn:aws:secretsmanager:us-east-1:631289602258:secret:Replit-aloha-terminal-UnBgBK';
 const DB_RESOURCE_ARN = process.env.DB_RESOURCE_ARN;
+const DB_PROXY_ENDPOINT = process.env.DB_PROXY_ENDPOINT || 'replit.proxy-cshguag6ii9q.us-east-1.rds.amazonaws.com';
 
 // Get database instance details (useful for troubleshooting)
 export async function getDBInstanceDetails() {
