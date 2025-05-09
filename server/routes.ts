@@ -294,10 +294,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Seed rooms
       await db.insert(rooms).values([
-        { name: "Room 101", description: "Main treatment room", capacity: 1, isActive: true },
-        { name: "Room 102", description: "Secondary treatment room", capacity: 1, isActive: true },
-        { name: "Room 103", description: "Consultation room", capacity: 2, isActive: true },
-        { name: "Room 104", description: "Deluxe room", capacity: 1, isActive: true },
+        { name: "Room 101", description: "Main treatment room", capacity: 1, isActive: 1 },
+        { name: "Room 102", description: "Secondary treatment room", capacity: 1, isActive: 1 },
+        { name: "Room 103", description: "Consultation room", capacity: 2, isActive: 1 },
+        { name: "Room 104", description: "Deluxe room", capacity: 1, isActive: 1 },
       ]);
     }
   } catch (error) {
