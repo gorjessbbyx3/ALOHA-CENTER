@@ -358,7 +358,7 @@ function addBusinessHeader(doc: PDFKit.PDFDocument): void {
   // Add business name
   doc.fontSize(20)
     .fillColor('#0f172a')
-    .text(BUSINESS_NAME, { align: 'center' })
+    .text('Aloha Light Center', { align: 'center' })
     .moveDown(0.3);
 
   // Add business details

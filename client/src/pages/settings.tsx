@@ -113,11 +113,11 @@ export default function Settings() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="clinicName">Clinic Name</Label>
-                    <Input id="clinicName" defaultValue="MediBook Clinic" />
+                    <Input id="clinicName" defaultValue="Aloha Light Center" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Contact Email</Label>
-                    <Input id="email" type="email" defaultValue="contact@medibook.com" />
+                    <Input id="email" type="email" defaultValue="contact@alohalightcenter.com" />
                   </div>
                 </div>
 
@@ -211,13 +211,13 @@ export default function Settings() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="website">Website</Label>
-                    <Input id="website" defaultValue="https://medibook.com" />
+                    <Input id="website" defaultValue="https://alohalightcenter.com" />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="address">Address</Label>
-                  <Textarea id="address" defaultValue="123 Medical Center Dr, Healthcare City, HC 12345" />
+                  <Textarea id="address" defaultValue="123 Aloha Way, Honolulu, HI 96815" />
                 </div>
                 
                 <div className="space-y-2">

@@ -97,9 +97,9 @@ This guide provides detailed technical instructions for setting up, customizing,
 1. Update the `package.json` file:
    ```json
    {
-     "name": "your-app-name",
-     "productName": "Your Application Name",
-     "description": "Your application description",
+     "name": "aloha-light-center",
+     "productName": "Aloha Light Center",
+     "description": "Clinic management system for Aloha Light Center",
      // ... other fields
    }
    ```
@@ -107,8 +107,8 @@ This guide provides detailed technical instructions for setting up, customizing,
 2. Update `electron-builder.json`:
    ```json
    {
-     "appId": "com.yourcompany.yourappname",
-     "productName": "Your Application Name",
+     "appId": "com.alohalightcenter.clinic",
+     "productName": "Aloha Light Center",
      // ... other fields
    }
    ```
@@ -117,7 +117,7 @@ This guide provides detailed technical instructions for setting up, customizing,
    ```javascript
    mainWindow = new BrowserWindow({
      // ... other options
-     title: 'Your Application Name'
+     title: 'Aloha Light Center'
    });
    ```
 
