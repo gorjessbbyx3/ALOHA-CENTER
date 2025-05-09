@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { ContextMenu } from "@/components/ui/context-menu";
@@ -14,7 +14,9 @@ import {
   ArrowRight, 
   ChevronDown,
   UserPlus,
-  Trash
+  Trash,
+  ExternalLink,
+  RefreshCw
 } from "lucide-react";
 import { Appointment, Patient } from "@shared/schema";
 import { format, addDays } from "date-fns";
@@ -132,6 +134,8 @@ function getAppointmentColorByStaff(staffId: number): string {
 }
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export function AppointmentBook() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -145,6 +149,10 @@ export function AppointmentBook() {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [viewType, setViewType] = useState<"day" | "week" | "month">("day");
+  const [useCalendly, setUseCalendly] = useState(false);
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
+  const calendlyRef = useRef<HTMLIFrameElement>(null);
+  const [isRefreshingCalendly, setIsRefreshingCalendly] = useState(false);
 
   // Fetch appointments
   const { data: appointments = [], isLoading: loadingAppointments } = useQuery<Appointment[]>({
@@ -211,8 +219,59 @@ export function AppointmentBook() {
 
   // Handle appointment addition
   const handleAddAppointment = (time: string, staffId: number, date: Date) => {
-    setNewAppointmentData({ time, staffId, date });
-    setIsAppointmentFormOpen(true);
+    if (useCalendly) {
+      setIsCalendlyOpen(true);
+    } else {
+      setNewAppointmentData({ time, staffId, date });
+      setIsAppointmentFormOpen(true);
+    }
+  };
+
+  // Handle Calendly event received
+  const handleCalendlyEvent = (e: MessageEvent) => {
+    if (e.data.event && e.data.event.indexOf('calendly') === 0) {
+      console.log("Calendly event received:", e.data);
+      
+      // Handle appointment scheduled
+      if (e.data.event === 'calendly.event_scheduled') {
+        // You would typically fetch the event details from Calendly's API
+        // and then create an appointment in your system
+        setIsCalendlyOpen(false);
+        
+        // Example of how you might create a local appointment based on Calendly data
+        const calendlyData = e.data.payload;
+        if (calendlyData) {
+          // Connect to your appointment system here
+          // This is a placeholder for where you'd create an appointment from Calendly data
+          console.log("Creating appointment from Calendly data", calendlyData);
+        }
+      }
+    }
+  };
+
+  // Add event listener for Calendly messages
+  useEffect(() => {
+    window.addEventListener('message', handleCalendlyEvent);
+    return () => {
+      window.removeEventListener('message', handleCalendlyEvent);
+    };
+  }, []);
+
+  // Handle Calendly refresh
+  const refreshCalendly = () => {
+    setIsRefreshingCalendly(true);
+    if (calendlyRef.current) {
+      const src = calendlyRef.current.src;
+      calendlyRef.current.src = '';
+      setTimeout(() => {
+        if (calendlyRef.current) {
+          calendlyRef.current.src = src;
+        }
+        setIsRefreshingCalendly(false);
+      }, 1000);
+    } else {
+      setIsRefreshingCalendly(false);
+    }
   };
 
   // Handle drag end
@@ -231,6 +290,17 @@ export function AppointmentBook() {
       {/* Toolbar */}
       <div className="bg-sidebar-background text-white py-2 px-4 flex items-center space-x-4">
         <div className="text-lg font-medium">Appointment Book</div>
+
+        <div className="flex items-center space-x-2 ml-4">
+          <Switch 
+            id="calendly-toggle" 
+            checked={useCalendly} 
+            onCheckedChange={setUseCalendly} 
+          />
+          <label htmlFor="calendly-toggle" className="text-sm">
+            Use Calendly
+          </label>
+        </div>
 
         <div className="flex items-center space-x-1 ml-auto">
           <Button 
@@ -361,6 +431,39 @@ export function AppointmentBook() {
           }}
         />
       )}
+
+      {/* Calendly Integration Dialog */}
+      <Dialog open={isCalendlyOpen} onOpenChange={setIsCalendlyOpen}>
+        <DialogContent className="max-w-4xl h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Schedule with Calendly</span>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={refreshCalendly}
+                disabled={isRefreshingCalendly}
+              >
+                <RefreshCw size={16} className={isRefreshingCalendly ? "animate-spin" : ""} />
+              </Button>
+            </DialogTitle>
+            <DialogDescription>
+              Book a time that works for you using our Calendly integration
+            </DialogDescription>
+          </DialogHeader>
+          <div className="relative h-full w-full mt-4">
+            <iframe
+              ref={calendlyRef}
+              src="https://calendly.com/your-account-here/30min"
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              title="Schedule Appointment"
+              className="rounded-md"
+            ></iframe>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

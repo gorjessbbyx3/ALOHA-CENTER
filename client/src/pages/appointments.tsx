@@ -37,9 +37,19 @@ export default function Appointments() {
   return (
     <AdminLayout 
       title="Appointment Book" 
-      subtitle="Schedule and manage appointments with drag-and-drop"
+      subtitle="Schedule and manage appointments with drag-and-drop or Calendly"
       onNewAppointment={() => setIsAppointmentFormOpen(true)}
       showExportBtn={false}
+      actionButton={
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => window.open('https://calendly.com/your-account-here', '_blank')}
+        >
+          <ExternalLink size={16} className="mr-2" />
+          Open Calendly Dashboard
+        </Button>
+      }
     >
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "calendar" | "rooms")} className="mb-4">
         <TabsList>
