@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// Try updated connection configuration with timeout settings
 const dbConfig = {
   host: process.env.DB_ENDPOINT || 'database-alohacenter.cshguag6ii9q.us-east-1.rds.amazonaws.com',
   port: parseInt(process.env.DB_PORT || '5432'),
@@ -12,7 +13,9 @@ const dbConfig = {
   password: process.env.DB_PASSWORD || 'Camputer69!',
   ssl: {
     rejectUnauthorized: false
-  }
+  },
+  connectionTimeoutMillis: 10000, // Increase timeout to 10 seconds
+  query_timeout: 10000 // Set query timeout
 };
 
 async function testConnection() {
@@ -100,15 +103,31 @@ if (process.env.DB_TYPE === 'memory') {
     }
   });
   
-  secondPool.query('SELECT NOW()')
-    .then(res => {
-      console.log('🟢 Successfully connected to PostgreSQL!');
-      console.log('Time from database:', res.rows[0].now);
-      process.exit(0);
-    })
-    .catch(err => {
-      console.error('🔴 PostgreSQL connection error:', err.message);
-      console.error('Check your database credentials and connectivity');
-      process.exit(1);
-    });
+  // Try to resolve the hostname first to check DNS
+const dns = require('dns').promises;
+
+dns.lookup(dbConfig.host)
+  .then(({ address, family }) => {
+    console.log(`DNS resolved ${dbConfig.host} to ${address} (IPv${family})`);
+    
+    // Continue with the connection attempt
+    return secondPool.query('SELECT NOW()');
+  })
+  .then(res => {
+    console.log('🟢 Successfully connected to PostgreSQL!');
+    console.log('Time from database:', res.rows[0].now);
+    process.exit(0);
+  })
+  .catch(err => {
+    console.error('🔴 PostgreSQL connection error:', err.message);
+    if (err.code === 'ETIMEDOUT') {
+      console.error('Connection timed out. Possible reasons:');
+      console.error('1. Database server is down or unreachable');
+      console.error('2. Database security group does not allow connections from Replit IP');
+      console.error('3. AWS RDS instance is in private subnet without proper routing');
+    }
+    console.error('Full error:', err);
+    console.error('Check your database credentials and connectivity');
+    process.exit(1);
+  });
 }
