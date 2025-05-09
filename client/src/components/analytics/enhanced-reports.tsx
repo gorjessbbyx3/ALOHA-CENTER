@@ -1,72 +1,92 @@
-import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { BarChartIcon, LineChartIcon, PieChartIcon } from 'lucide-react';
 
-export const EnhancedReports = () => {
+import * as React from "react"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { DatePicker } from "@/components/ui/date-picker"
+
+const data = [
+  {
+    name: "Jan",
+    total: Math.floor(Math.random() * 5000) + 1000,
+  },
+  {
+    name: "Feb",
+    total: Math.floor(Math.random() * 5000) + 1000,
+  },
+  {
+    name: "Mar",
+    total: Math.floor(Math.random() * 5000) + 1000,
+  },
+  {
+    name: "Apr",
+    total: Math.floor(Math.random() * 5000) + 1000,
+  },
+  {
+    name: "May",
+    total: Math.floor(Math.random() * 5000) + 1000,
+  },
+  {
+    name: "Jun",
+    total: Math.floor(Math.random() * 5000) + 1000,
+  },
+]
+
+export function EnhancedReports() {
+  const [startDate, setStartDate] = React.useState<Date>()
+  const [endDate, setEndDate] = React.useState<Date>()
+
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Enhanced Analytics</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Revenue Report</h3>
-            <BarChartIcon className="h-5 w-5 text-muted-foreground" />
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="space-y-1">
+          <CardTitle>Enhanced Revenue Reports</CardTitle>
+          <CardDescription>
+            Detailed revenue breakdown by service type
+          </CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex space-x-4 mb-4">
+          <div className="grid gap-2">
+            <label htmlFor="startDate">Start Date</label>
+            <DatePicker date={startDate} setDate={setStartDate} />
           </div>
-          <div className="space-y-2">
-            <p>View detailed revenue breakdown by service type, time period, and more.</p>
-            <Button variant="outline" className="w-full">View Report</Button>
+          <div className="grid gap-2">
+            <label htmlFor="endDate">End Date</label>
+            <DatePicker date={endDate} setDate={setEndDate} />
           </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Patient Analytics</h3>
-            <PieChartIcon className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="space-y-2">
-            <p>Analyze patient demographics, retention rates, and referral sources.</p>
-            <Button variant="outline" className="w-full">View Report</Button>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Growth Trends</h3>
-            <LineChartIcon className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="space-y-2">
-            <p>Track business growth metrics over time with customizable date ranges.</p>
-            <Button variant="outline" className="w-full">View Report</Button>
-          </div>
-        </Card>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-4 mt-6">
-        <Card className="p-4 flex-1">
-          <h3 className="text-lg font-medium mb-4">Date Range Selection</h3>
-          <div className="flex justify-center">
-            <Calendar
-              mode="range"
-              className="rounded-md border"
+        </div>
+        <ResponsiveContainer width="100%" height={350}>
+          <BarChart data={data}>
+            <XAxis
+              dataKey="name"
+              stroke="#888888"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
             />
-          </div>
-        </Card>
-
-        <Card className="p-4 flex-1">
-          <h3 className="text-lg font-medium mb-4">Report Options</h3>
-          <div className="space-y-2">
-            <Button variant="outline" className="w-full">Daily Report</Button>
-            <Button variant="outline" className="w-full">Weekly Report</Button>
-            <Button variant="outline" className="w-full">Monthly Report</Button>
-            <Button variant="outline" className="w-full">Custom Report</Button>
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-};
-
-export default EnhancedReports;
+            <YAxis
+              stroke="#888888"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(value) => `$${value}`}
+            />
+            <Bar
+              dataKey="total"
+              fill="#adfa1d"
+              radius={[4, 4, 0, 0]}
+              className="fill-primary"
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button variant="outline">Export Data</Button>
+        <Button>Generate Report</Button>
+      </CardFooter>
+    </Card>
+  )
+}
