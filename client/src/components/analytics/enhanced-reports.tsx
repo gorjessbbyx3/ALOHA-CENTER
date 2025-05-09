@@ -1,37 +1,155 @@
-import React from 'react';
 
-interface EnhancedReportsProps {
-  startDate?: string;
-  endDate?: string;
-  reportType?: 'daily' | 'weekly' | 'monthly' | 'yearly';
-}
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarChart, LineChart, PieChart } from "lucide-react";
 
-export const EnhancedReports: React.FC<EnhancedReportsProps> = ({ 
-  startDate, 
-  endDate,
-  reportType = 'monthly'
-}) => {
+export const EnhancedReports = () => {
+  const [dateRange, setDateRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({
+    from: new Date(new Date().setDate(new Date().getDate() - 30)),
+    to: new Date(),
+  });
+  
+  const [groupBy, setGroupBy] = useState<"day" | "week" | "month">("day");
+  
   return (
-    <div className="p-4 bg-white rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Enhanced Reports</h2>
-      <div className="space-y-4">
-        <div>
-          <p className="font-medium">Report Type: {reportType}</p>
-          <p className="text-sm text-gray-600">
-            Date Range: {startDate || 'Not set'} - {endDate || 'Not set'}
-          </p>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-lg font-medium">Date Range</h3>
+          <div className="flex space-x-2">
+            <DatePicker
+              selected={dateRange.from}
+              onSelect={(date) => setDateRange({ ...dateRange, from: date })}
+              className="border rounded-md p-2"
+              placeholder="From date"
+            />
+            <DatePicker
+              selected={dateRange.to}
+              onSelect={(date) => setDateRange({ ...dateRange, to: date })}
+              className="border rounded-md p-2"
+              placeholder="To date"
+            />
+          </div>
         </div>
-        <div className="h-64 bg-gray-100 rounded flex items-center justify-center">
-          <p className="text-gray-500">Report visualization will appear here</p>
+        <div className="flex flex-col gap-1">
+          <h3 className="text-lg font-medium">Group By</h3>
+          <Select value={groupBy} onValueChange={(value: "day" | "week" | "month") => setGroupBy(value)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select grouping" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="day">Day</SelectItem>
+              <SelectItem value="week">Week</SelectItem>
+              <SelectItem value="month">Month</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <div className="flex justify-end">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded">
-            Generate Report
-          </button>
-        </div>
+        <Button>Generate Report</Button>
+      </div>
+      
+      <Tabs defaultValue="revenue">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="revenue">Revenue Analysis</TabsTrigger>
+          <TabsTrigger value="services">Service Popularity</TabsTrigger>
+          <TabsTrigger value="retention">Patient Retention</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="revenue" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue Trends</CardTitle>
+              <CardDescription>Revenue performance over time</CardDescription>
+            </CardHeader>
+            <CardContent className="h-80 flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <LineChart className="mx-auto h-12 w-12 mb-4" />
+                <p>Revenue chart visualization would appear here</p>
+                <p className="text-sm">Connected to '/api/reports/revenue' endpoint</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="services" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Service Popularity</CardTitle>
+              <CardDescription>Most popular services by appointment count</CardDescription>
+            </CardHeader>
+            <CardContent className="h-80 flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <PieChart className="mx-auto h-12 w-12 mb-4" />
+                <p>Service popularity chart would appear here</p>
+                <p className="text-sm">Connected to '/api/reports/services' endpoint</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="retention" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Patient Retention</CardTitle>
+              <CardDescription>Returning vs. new patients over time</CardDescription>
+            </CardHeader>
+            <CardContent className="h-80 flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <BarChart className="mx-auto h-12 w-12 mb-4" />
+                <p>Patient retention chart would appear here</p>
+                <p className="text-sm">Connected to '/api/reports/retention' endpoint</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Key Metrics</CardTitle>
+            <CardDescription>Performance indicators for the selected period</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span>Total Revenue</span>
+                <span className="font-bold">$0.00</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Appointments</span>
+                <span className="font-bold">0</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>New Patients</span>
+                <span className="font-bold">0</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Average Visit Value</span>
+                <span className="font-bold">$0.00</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Staff Performance</CardTitle>
+            <CardDescription>Provider productivity metrics</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center text-muted-foreground h-40 flex items-center justify-center">
+              <p>Staff performance metrics would appear here</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 };
-
-export default EnhancedReports;
