@@ -178,9 +178,89 @@ export class MemStorage implements IStorage {
     });
     
 
+  // Treatment Package methods
+  async createTreatmentPackage(data: InsertTreatmentPackage): Promise<TreatmentPackage> {
+    try {
+      const [treatmentPackage] = await db.insert(schema.treatmentPackages).values(data).returning();
+      
+      // Log activity
+      await this.createActivity({
+        type: "treatment_package_created",
+        description: `Created treatment package "${data.displayName}"`,
+        entityId: treatmentPackage.id,
+        entityType: "treatment_package"
+      });
+      
+      return treatmentPackage;
+    } catch (error) {
+      console.error("Error creating treatment package:", error);
+      throw error;
+    }
+  }
+  
+  async getTreatmentPackage(id: number): Promise<TreatmentPackage | null> {
+    try {
+      const [treatmentPackage] = await db.select().from(schema.treatmentPackages).where(eq(schema.treatmentPackages.id, id)).limit(1);
+      return treatmentPackage || null;
+    } catch (error) {
+      console.error("Error fetching treatment package:", error);
+      throw error;
+    }
+  }
+  
+  async getTreatmentPackages(activeOnly: boolean = true, category?: string): Promise<TreatmentPackage[]> {
+    try {
+      let query = db.select().from(schema.treatmentPackages);
+      
+      if (activeOnly) {
+        query = query.where(eq(schema.treatmentPackages.active, true));
+      }
+      
+      if (category) {
+        query = query.where(eq(schema.treatmentPackages.category, category));
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error("Error fetching treatment packages:", error);
+      throw error;
+    }
+  }
+  
+  async updateTreatmentPackage(id: number, data: Partial<TreatmentPackage>): Promise<TreatmentPackage> {
+    try {
+      const [updatedPackage] = await db
+        .update(schema.treatmentPackages)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(schema.treatmentPackages.id, id))
+        .returning();
+      
+      // Log activity
+      await this.createActivity({
+        type: "treatment_package_updated",
+        description: `Updated treatment package "${updatedPackage.displayName}"`,
+        entityId: updatedPackage.id,
+        entityType: "treatment_package"
+      });
+      
+      return updatedPackage;
+    } catch (error) {
+      console.error("Error updating treatment package:", error);
+      throw error;
+    }
+  }
+  
   // Treatment Plan methods
   async createTreatmentPlan(data: InsertTreatmentPlan): Promise<TreatmentPlan> {
     try {
+      // If this is based on a package, get the package details
+      if (data.packageId) {
+        const packageDetails = await this.getTreatmentPackage(data.packageId);
+        if (packageDetails && !data.totalSessions) {
+          data.totalSessions = packageDetails.sessionCount;
+        }
+      }
+      
       const [treatmentPlan] = await db.insert(schema.treatmentPlans).values(data).returning();
       
       // Log activity
@@ -236,6 +316,29 @@ export class MemStorage implements IStorage {
       return updatedPlan;
     } catch (error) {
       console.error("Error updating treatment plan:", error);
+      throw error;
+    }
+  }
+  
+  async incrementTreatmentPlanSessions(id: number): Promise<TreatmentPlan> {
+    try {
+      const plan = await this.getTreatmentPlan(id);
+      if (!plan) {
+        throw new Error("Treatment plan not found");
+      }
+      
+      const [updatedPlan] = await db
+        .update(schema.treatmentPlans)
+        .set({ 
+          sessionsCompleted: (plan.sessionsCompleted || 0) + 1,
+          updatedAt: new Date() 
+        })
+        .where(eq(schema.treatmentPlans.id, id))
+        .returning();
+      
+      return updatedPlan;
+    } catch (error) {
+      console.error("Error incrementing treatment plan sessions:", error);
       throw error;
     }
   }
@@ -417,9 +520,20 @@ export class MemStorage implements IStorage {
     }
   }
   
-  async createOrUpdateLoyaltyPoints(patientId: number, points: number, type: string, source: string = "", sourceId?: number, description: string = ""): Promise<LoyaltyPoints> {
+  async createOrUpdateLoyaltyPoints(
+    patientId: number, 
+    points: number, 
+    type: string, 
+    source: string = "", 
+    sourceId?: number, 
+    description: string = "",
+    dollarsSpent?: number
+  ): Promise<LoyaltyPoints> {
     try {
       let loyaltyAccount = await this.getPatientLoyalty(patientId);
+      
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1; // 1-12
       
       if (!loyaltyAccount) {
         // Create new loyalty account
@@ -429,7 +543,9 @@ export class MemStorage implements IStorage {
             patientId,
             points: points > 0 ? points : 0,
             totalEarned: points > 0 ? points : 0,
-            level: "bronze"
+            monthlyPointsEarned: points > 0 ? points : 0,
+            level: "bronze",
+            referralsCount: type === "referral" ? 1 : 0
           })
           .returning();
         
@@ -438,6 +554,17 @@ export class MemStorage implements IStorage {
         // Update existing account
         const newPoints = points + Number(loyaltyAccount.points);
         const newTotalEarned = points > 0 ? Number(loyaltyAccount.totalEarned) + points : Number(loyaltyAccount.totalEarned);
+        
+        // Update monthly points (reset if it's a new month)
+        let monthlyPoints = Number(loyaltyAccount.monthlyPointsEarned || 0);
+        if (points > 0) {
+          monthlyPoints += points;
+        }
+        
+        // Update referrals count if this is a referral
+        const referralsCount = type === "referral" 
+          ? Number(loyaltyAccount.referralsCount || 0) + 1 
+          : Number(loyaltyAccount.referralsCount || 0);
         
         // Determine loyalty level based on total points earned
         let level = loyaltyAccount.level;
@@ -454,6 +581,8 @@ export class MemStorage implements IStorage {
           .set({
             points: newPoints < 0 ? 0 : newPoints,
             totalEarned: newTotalEarned,
+            monthlyPointsEarned: monthlyPoints,
+            referralsCount,
             level,
             updatedAt: new Date()
           })
@@ -470,7 +599,8 @@ export class MemStorage implements IStorage {
         type,
         source,
         sourceId,
-        description
+        description,
+        dollarsSpent
       });
       
       // Log activity
@@ -498,6 +628,104 @@ export class MemStorage implements IStorage {
         .limit(limit);
     } catch (error) {
       console.error("Error fetching loyalty transactions:", error);
+      throw error;
+    }
+  }
+  
+  // Loyalty Subscription methods
+  async createLoyaltySubscription(data: InsertLoyaltySubscription): Promise<LoyaltySubscription> {
+    try {
+      const [subscription] = await db.insert(schema.loyaltySubscriptions).values(data).returning();
+      
+      // Log activity
+      await this.createActivity({
+        type: "loyalty_subscription_created",
+        description: `Created ${data.planType} loyalty subscription for patient ID ${data.patientId}`,
+        entityId: subscription.id,
+        entityType: "loyalty_subscription"
+      });
+      
+      return subscription;
+    } catch (error) {
+      console.error("Error creating loyalty subscription:", error);
+      throw error;
+    }
+  }
+  
+  async getLoyaltySubscription(id: number): Promise<LoyaltySubscription | null> {
+    try {
+      const [subscription] = await db.select().from(schema.loyaltySubscriptions).where(eq(schema.loyaltySubscriptions.id, id)).limit(1);
+      return subscription || null;
+    } catch (error) {
+      console.error("Error fetching loyalty subscription:", error);
+      throw error;
+    }
+  }
+  
+  async getPatientLoyaltySubscription(patientId: number): Promise<LoyaltySubscription | null> {
+    try {
+      const [subscription] = await db
+        .select()
+        .from(schema.loyaltySubscriptions)
+        .where(and(
+          eq(schema.loyaltySubscriptions.patientId, patientId),
+          eq(schema.loyaltySubscriptions.status, "active")
+        ))
+        .orderBy(desc(schema.loyaltySubscriptions.createdAt))
+        .limit(1);
+      
+      return subscription || null;
+    } catch (error) {
+      console.error("Error fetching patient loyalty subscription:", error);
+      throw error;
+    }
+  }
+  
+  async updateLoyaltySubscription(id: number, data: Partial<LoyaltySubscription>): Promise<LoyaltySubscription> {
+    try {
+      const [subscription] = await db
+        .update(schema.loyaltySubscriptions)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(schema.loyaltySubscriptions.id, id))
+        .returning();
+      
+      // Log activity
+      await this.createActivity({
+        type: "loyalty_subscription_updated",
+        description: `Updated loyalty subscription #${id}`,
+        entityId: id,
+        entityType: "loyalty_subscription"
+      });
+      
+      return subscription;
+    } catch (error) {
+      console.error("Error updating loyalty subscription:", error);
+      throw error;
+    }
+  }
+  
+  async cancelLoyaltySubscription(id: number, reason: string = ""): Promise<LoyaltySubscription> {
+    try {
+      const [subscription] = await db
+        .update(schema.loyaltySubscriptions)
+        .set({ 
+          status: "cancelled",
+          updatedAt: new Date()
+        })
+        .where(eq(schema.loyaltySubscriptions.id, id))
+        .returning();
+      
+      // Log activity
+      await this.createActivity({
+        type: "loyalty_subscription_cancelled",
+        description: `Cancelled loyalty subscription #${id}${reason ? ` - Reason: ${reason}` : ''}`,
+        entityId: id,
+        entityType: "loyalty_subscription"
+      });
+      
+      return subscription;
+    } catch (error) {
+      console.error("Error cancelling loyalty subscription:", error);
       throw error;
     }
   }

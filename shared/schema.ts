@@ -145,6 +145,31 @@ export const treatmentPlans = pgTable("treatment_plans", {
   goals: text("goals"),
   notes: text("notes"),
   progress: text("progress"),
+  packageId: integer("package_id").references(() => treatmentPackages.id),
+  sessionsCompleted: integer("sessions_completed").default(0),
+  totalSessions: integer("total_sessions"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Treatment Package schema
+export const treatmentPackages = pgTable("treatment_packages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  focus: text("focus"),
+  idealFor: text("ideal_for"),
+  duration: text("duration"),
+  sessionType: text("session_type"),
+  sessionCount: integer("session_count"),
+  sessionCost: numeric("session_cost"),
+  totalCost: numeric("total_cost"),
+  addOns: text("add_ons"),
+  bonuses: text("bonuses"),
+  active: boolean("active").default(true),
+  category: text("category").default("standard"), // standard, overnight, pet, senior, etc.
+  packageType: text("package_type"), // group, private, mixed
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -159,10 +184,32 @@ export const insertTreatmentPlanSchema = createInsertSchema(treatmentPlans).pick
   goals: true,
   notes: true,
   progress: true,
+  packageId: true,
+  totalSessions: true,
+});
+
+export const insertTreatmentPackageSchema = createInsertSchema(treatmentPackages).pick({
+  name: true,
+  displayName: true,
+  description: true,
+  focus: true,
+  idealFor: true,
+  duration: true,
+  sessionType: true,
+  sessionCount: true,
+  sessionCost: true,
+  totalCost: true,
+  addOns: true,
+  bonuses: true,
+  active: true,
+  category: true,
+  packageType: true,
 });
 
 export type InsertTreatmentPlan = z.infer<typeof insertTreatmentPlanSchema>;
 export type TreatmentPlan = typeof treatmentPlans.$inferSelect;
+export type InsertTreatmentPackage = z.infer<typeof insertTreatmentPackageSchema>;
+export type TreatmentPackage = typeof treatmentPackages.$inferSelect;
 
 // Gift Card schema
 export const giftCards = pgTable("gift_cards", {
@@ -225,6 +272,9 @@ export const loyaltyPoints = pgTable("loyalty_points", {
   points: integer("points").notNull().default(0),
   totalEarned: integer("total_earned").notNull().default(0),
   level: text("level").default("bronze"),
+  monthlyPointsEarned: integer("monthly_points_earned").default(0),
+  referralsCount: integer("referrals_count").default(0),
+  birthdayMonth: integer("birthday_month"),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -232,11 +282,27 @@ export const loyaltyTransactions = pgTable("loyalty_transactions", {
   id: serial("id").primaryKey(),
   patientId: integer("patient_id").references(() => patients.id).notNull(),
   points: integer("points").notNull(),
-  type: text("type").notNull(), // earned, redeemed, expired, etc.
+  type: text("type").notNull(), // earned, redeemed, expired, referral, birthday, etc.
   source: text("source"), // appointment, referral, promotion, etc.
   sourceId: integer("source_id"), // ID of appointment, etc. if applicable
   description: text("description"),
+  dollarsSpent: numeric("dollars_spent"),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const loyaltySubscriptions = pgTable("loyalty_subscriptions", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").references(() => patients.id).notNull(),
+  planType: text("plan_type").notNull(), // basic, premium
+  monthlyFee: numeric("monthly_fee").notNull(),
+  includedSessions: integer("included_sessions").notNull(),
+  includesReiki: boolean("includes_reiki").default(false),
+  includesPetAddOn: boolean("includes_pet_add_on").default(false),
+  startDate: timestamp("start_date").notNull(),
+  nextBillingDate: timestamp("next_billing_date"),
+  status: text("status").default("active"), // active, paused, cancelled
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertLoyaltyPointsSchema = createInsertSchema(loyaltyPoints).pick({
@@ -244,6 +310,9 @@ export const insertLoyaltyPointsSchema = createInsertSchema(loyaltyPoints).pick(
   points: true,
   totalEarned: true,
   level: true,
+  monthlyPointsEarned: true,
+  referralsCount: true,
+  birthdayMonth: true,
 });
 
 export const insertLoyaltyTransactionSchema = createInsertSchema(loyaltyTransactions).pick({
@@ -253,12 +322,27 @@ export const insertLoyaltyTransactionSchema = createInsertSchema(loyaltyTransact
   source: true,
   sourceId: true,
   description: true,
+  dollarsSpent: true,
+});
+
+export const insertLoyaltySubscriptionSchema = createInsertSchema(loyaltySubscriptions).pick({
+  patientId: true,
+  planType: true,
+  monthlyFee: true,
+  includedSessions: true,
+  includesReiki: true,
+  includesPetAddOn: true,
+  startDate: true,
+  nextBillingDate: true,
+  status: true,
 });
 
 export type InsertLoyaltyPoints = z.infer<typeof insertLoyaltyPointsSchema>;
 export type LoyaltyPoints = typeof loyaltyPoints.$inferSelect;
 export type InsertLoyaltyTransaction = z.infer<typeof insertLoyaltyTransactionSchema>;
 export type LoyaltyTransaction = typeof loyaltyTransactions.$inferSelect;
+export type InsertLoyaltySubscription = z.infer<typeof insertLoyaltySubscriptionSchema>;
+export type LoyaltySubscription = typeof loyaltySubscriptions.$inferSelect;
 
     appointmentId: true,
     patientId: true,

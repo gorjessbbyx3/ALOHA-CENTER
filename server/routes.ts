@@ -62,6 +62,171 @@ async function seedInitialData() {
       role: "admin"
     });
   }
+  
+  // Check if we have treatment packages
+  try {
+    const existingPackages = await db.select().from(schema.treatmentPackages);
+    
+    if (existingPackages.length === 0) {
+      console.log("Seeding treatment packages...");
+      
+      // Seed treatment packages
+      await db.insert(schema.treatmentPackages).values([
+        {
+          name: "senior_wellness",
+          displayName: "Kupuna Light Vitality",
+          description: "Senior Wellness Plan for ages 65+",
+          focus: "Cellular support, circulation, mood, and joint wellness",
+          idealFor: "Seniors ages 65+",
+          duration: "4 weeks (2x per week)",
+          sessionType: "Group or private light sessions (2 hours each)",
+          sessionCount: 8,
+          sessionCost: "45",
+          totalCost: "360",
+          addOns: "+$25 for Reiki energy session (30 min)",
+          bonuses: "Includes 1 free wellness check-in and comfort mat rental",
+          category: "senior",
+          packageType: "group"
+        },
+        {
+          name: "pet_wellness",
+          displayName: "Companion Frequency Care",
+          description: "Pet Wellness Plan for pets with health issues",
+          focus: "Pet recovery, calmness, aging support",
+          idealFor: "Pets with stress, mobility issues, or degenerative conditions",
+          duration: "3 weeks (1–2x per week)",
+          sessionType: "Private light session with owner",
+          sessionCount: 6,
+          sessionCost: "120",
+          totalCost: "720",
+          addOns: "Base Rate: $100 (2hr private) + $20 pet add-on",
+          bonuses: "Includes Pet Energy Field Guide + follow-up check-in",
+          category: "pet",
+          packageType: "private"
+        },
+        {
+          name: "couples_harmony",
+          displayName: "Together in the Light",
+          description: "Couples Harmony Plan for partners",
+          focus: "Shared emotional reset, grounding, and connection",
+          idealFor: "Couples, partners, or close friends",
+          duration: "2x per week for 3 weeks",
+          sessionType: "Private 2-hour light session (shared recliners or mats)",
+          sessionCount: 6,
+          sessionCost: "150",
+          totalCost: "900",
+          addOns: null,
+          bonuses: "10% off single reiki add-ons for each person",
+          category: "couples",
+          packageType: "private"
+        },
+        {
+          name: "general_healing_group",
+          displayName: "Regenerate & Recharge (Group)",
+          description: "General Healing Plan with group sessions",
+          focus: "Stress relief, energy, cellular detox",
+          idealFor: "First-timers or long-term support seekers",
+          duration: "Flexible — 1 to 2x per week for 6 weeks",
+          sessionType: "Group session",
+          sessionCount: 8,
+          sessionCost: "60",
+          totalCost: "480",
+          addOns: null,
+          bonuses: "Free detox guide PDF + optional support call",
+          category: "general",
+          packageType: "group"
+        },
+        {
+          name: "general_healing_private",
+          displayName: "Regenerate & Recharge (Private)",
+          description: "General Healing Plan with private sessions",
+          focus: "Stress relief, energy, cellular detox",
+          idealFor: "First-timers or long-term support seekers",
+          duration: "Flexible — 1 to 2x per week for 6 weeks",
+          sessionType: "Private session",
+          sessionCount: 6,
+          sessionCost: "100",
+          totalCost: "600",
+          addOns: null,
+          bonuses: "Free detox guide PDF + optional support call",
+          category: "general",
+          packageType: "private"
+        },
+        {
+          name: "veteran_plan",
+          displayName: "Restorative Light Path",
+          description: "Veteran Plan with custom schedule",
+          focus: "Custom based on client needs",
+          idealFor: "Veterans with specific healing needs",
+          duration: "Custom schedule based on client intake",
+          sessionType: "Private sessions",
+          sessionCount: null,
+          sessionCost: null,
+          totalCost: null,
+          addOns: "Sliding scale pricing available",
+          bonuses: "Includes: Intake consult + wellness support materials",
+          category: "veteran",
+          packageType: "private",
+          active: true
+        },
+        {
+          name: "full_spectrum_reset",
+          displayName: "Full Spectrum Reset",
+          description: "12 Hour Overnight Experience",
+          focus: "Deep reset and healing",
+          idealFor: "Those seeking intensive treatment",
+          duration: "12 hours (8pm–8am)",
+          sessionType: "Private overnight light session",
+          sessionCount: 1,
+          sessionCost: "240",
+          totalCost: "240",
+          addOns: "Couple rate: $400",
+          bonuses: "Herbal tea & guided meditation track, Light detox support kit + morning journal",
+          category: "overnight",
+          packageType: "private",
+          active: true
+        },
+        {
+          name: "weekend_quantum_reboot",
+          displayName: "Weekend Quantum Reboot",
+          description: "2-day intensive healing retreat",
+          focus: "Complete system reset",
+          idealFor: "Those seeking breakthrough healing",
+          duration: "2 overnight sessions (Fri–Sun)",
+          sessionType: "Private overnight sessions plus reiki",
+          sessionCount: 3,
+          sessionCost: "650",
+          totalCost: "650",
+          addOns: "Couple rate: $1200",
+          bonuses: "1 guided reiki session, Meal + wellness ritual kit",
+          category: "overnight",
+          packageType: "private",
+          active: false
+        },
+        {
+          name: "pet_partner_retreat",
+          displayName: "Pet & Partner Rest Retreat",
+          description: "Overnight healing for pet and owner",
+          focus: "Joint healing for pet and owner",
+          idealFor: "Pet owners seeking shared healing experience",
+          duration: "8-hour overnight session",
+          sessionType: "Private overnight session with pet",
+          sessionCount: 1,
+          sessionCost: "280",
+          totalCost: "280",
+          addOns: "Limit 1 animal",
+          bonuses: "Pet bed, crystals & vibrational soundscape",
+          category: "pet",
+          packageType: "private",
+          active: false
+        }
+      ]);
+      
+      console.log("Treatment packages seeded successfully");
+    }
+  } catch (error) {
+    console.error("Error seeding treatment packages:", error);
+  }
 
   console.log("Initial data seeding complete");
 }
@@ -518,6 +683,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+  // Treatment Package Routes
+  app.get("/api/treatment-packages", async (req, res) => {
+    try {
+      const activeOnly = req.query.active !== "false";
+      const category = req.query.category as string | undefined;
+      const packages = await storage.getTreatmentPackages(activeOnly, category);
+      res.json(packages);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.get("/api/treatment-packages/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const treatmentPackage = await storage.getTreatmentPackage(id);
+      
+      if (!treatmentPackage) {
+        return res.status(404).json({ message: "Treatment package not found" });
+      }
+      
+      res.json(treatmentPackage);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.post("/api/treatment-packages", async (req, res) => {
+    try {
+      const packageData = req.body;
+      const treatmentPackage = await storage.createTreatmentPackage(packageData);
+      res.status(201).json(treatmentPackage);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.patch("/api/treatment-packages/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const packageData = req.body;
+      const updatedPackage = await storage.updateTreatmentPackage(id, packageData);
+      res.json(updatedPackage);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
   // Treatment Plan Routes
   app.get("/api/treatment-plans/:id", async (req, res) => {
     try {
@@ -526,6 +739,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!treatmentPlan) {
         return res.status(404).json({ message: "Treatment plan not found" });
+      }
+      
+      // If the plan has a package, get the package details too
+      if (treatmentPlan.packageId) {
+        const packageDetails = await storage.getTreatmentPackage(treatmentPlan.packageId);
+        
+        if (packageDetails) {
+          return res.json({
+            ...treatmentPlan,
+            packageDetails
+          });
+        }
       }
       
       res.json(treatmentPlan);
@@ -538,7 +763,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const patientId = parseInt(req.params.id);
       const treatmentPlans = await storage.getTreatmentPlansByPatient(patientId);
-      res.json(treatmentPlans);
+      
+      // Get package details for each plan if it has a packageId
+      const plansWithPackages = await Promise.all(
+        treatmentPlans.map(async (plan) => {
+          if (plan.packageId) {
+            const packageDetails = await storage.getTreatmentPackage(plan.packageId);
+            return {
+              ...plan,
+              packageDetails: packageDetails || undefined
+            };
+          }
+          return plan;
+        })
+      );
+      
+      res.json(plansWithPackages);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -559,6 +799,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const treatmentPlanData = req.body;
       const updatedPlan = await storage.updateTreatmentPlan(id, treatmentPlanData);
+      res.json(updatedPlan);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.post("/api/treatment-plans/:id/increment-session", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updatedPlan = await storage.incrementTreatmentPlanSessions(id);
       res.json(updatedPlan);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -708,7 +958,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      res.json(loyaltyPoints);
+      // Get subscription if exists
+      const subscription = await storage.getPatientLoyaltySubscription(patientId);
+      
+      res.json({
+        ...loyaltyPoints,
+        subscription: subscription || undefined
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -729,7 +985,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/patients/:id/loyalty/add", async (req, res) => {
     try {
       const patientId = parseInt(req.params.id);
-      const { points, type, source, sourceId, description } = req.body;
+      const { points, type, source, sourceId, description, dollarsSpent } = req.body;
       
       if (!points || !type) {
         return res.status(400).json({ message: "Points and type are required" });
@@ -741,7 +997,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type,
         source,
         sourceId,
-        description
+        description,
+        dollarsSpent
       );
       
       res.json(loyaltyAccount);
@@ -777,6 +1034,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       res.json(updatedAccount);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Loyalty Subscription Routes
+  app.get("/api/loyalty/subscriptions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const subscription = await storage.getLoyaltySubscription(id);
+      
+      if (!subscription) {
+        return res.status(404).json({ message: "Subscription not found" });
+      }
+      
+      res.json(subscription);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.post("/api/patients/:id/loyalty/subscription", async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const subscriptionData = {
+        ...req.body,
+        patientId,
+        startDate: req.body.startDate || new Date(),
+        nextBillingDate: req.body.nextBillingDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days later
+      };
+      
+      // First check if patient already has an active subscription
+      const existingSubscription = await storage.getPatientLoyaltySubscription(patientId);
+      
+      if (existingSubscription) {
+        return res.status(400).json({ 
+          message: "Patient already has an active subscription",
+          subscription: existingSubscription
+        });
+      }
+      
+      const subscription = await storage.createLoyaltySubscription(subscriptionData);
+      
+      // Add points for subscribing
+      await storage.createOrUpdateLoyaltyPoints(
+        patientId,
+        50, // Bonus points for subscribing
+        "subscription_started",
+        "loyalty_subscription",
+        subscription.id,
+        `Signed up for ${subscriptionData.planType} subscription plan`
+      );
+      
+      res.status(201).json(subscription);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.patch("/api/loyalty/subscriptions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const subscriptionData = req.body;
+      const updatedSubscription = await storage.updateLoyaltySubscription(id, subscriptionData);
+      res.json(updatedSubscription);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.post("/api/loyalty/subscriptions/:id/cancel", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { reason } = req.body;
+      const cancelledSubscription = await storage.cancelLoyaltySubscription(id, reason);
+      res.json(cancelledSubscription);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
