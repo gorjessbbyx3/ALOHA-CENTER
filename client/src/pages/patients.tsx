@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 import { Award, ClipboardList } from "lucide-react";
-import { LoyaltyCard } from "@/components/loyalty/loyalty-card";
+import LoyaltyCard from "@/components/loyalty/loyalty-card";
 import { TreatmentPlanForm } from "@/components/treatment/treatment-plan-form";
 
 import { Badge } from "@/components/ui/badge";
