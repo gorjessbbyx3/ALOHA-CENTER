@@ -9,7 +9,7 @@
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
-    "test:db": "node --loader tsx test-db-connection.js"
+    "test:db": "node --import tsx test-db-connection.js"
   },
   "dependencies": {
     "@aws-sdk/client-rds": "^3.799.0",
