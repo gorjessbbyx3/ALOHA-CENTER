@@ -517,6 +517,324 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+  // Treatment Plan Routes
+  app.get("/api/treatment-plans/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const treatmentPlan = await storage.getTreatmentPlan(id);
+      
+      if (!treatmentPlan) {
+        return res.status(404).json({ message: "Treatment plan not found" });
+      }
+      
+      res.json(treatmentPlan);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.get("/api/patients/:id/treatment-plans", async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const treatmentPlans = await storage.getTreatmentPlansByPatient(patientId);
+      res.json(treatmentPlans);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.post("/api/treatment-plans", async (req, res) => {
+    try {
+      const treatmentPlanData = req.body;
+      const treatmentPlan = await storage.createTreatmentPlan(treatmentPlanData);
+      res.status(201).json(treatmentPlan);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.patch("/api/treatment-plans/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const treatmentPlanData = req.body;
+      const updatedPlan = await storage.updateTreatmentPlan(id, treatmentPlanData);
+      res.json(updatedPlan);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Gift Card Routes
+  app.post("/api/gift-cards", async (req, res) => {
+    try {
+      const giftCardData = req.body;
+      const giftCard = await storage.createGiftCard(giftCardData);
+      res.status(201).json(giftCard);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.get("/api/gift-cards/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const giftCard = await storage.getGiftCard(id);
+      
+      if (!giftCard) {
+        return res.status(404).json({ message: "Gift card not found" });
+      }
+      
+      res.json(giftCard);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.get("/api/gift-cards/validate/:code", async (req, res) => {
+    try {
+      const code = req.params.code;
+      const giftCard = await storage.getGiftCardByCode(code);
+      
+      if (!giftCard) {
+        return res.status(404).json({ message: "Gift card not found" });
+      }
+      
+      // Check if the gift card is valid
+      if (giftCard.status !== 'active') {
+        return res.status(400).json({ 
+          message: `Gift card is ${giftCard.status}`,
+          giftCard
+        });
+      }
+      
+      // Check if the gift card is expired
+      if (giftCard.expiryDate && new Date(giftCard.expiryDate) < new Date()) {
+        return res.status(400).json({ 
+          message: "Gift card is expired",
+          giftCard 
+        });
+      }
+      
+      res.json({
+        valid: true,
+        giftCard
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.post("/api/gift-cards/redeem", async (req, res) => {
+    try {
+      const { code, amount } = req.body;
+      
+      if (!code || !amount) {
+        return res.status(400).json({ message: "Gift card code and amount are required" });
+      }
+      
+      const updatedCard = await storage.useGiftCard(code, parseFloat(amount));
+      
+      res.json({
+        success: true,
+        giftCard: updatedCard
+      });
+    } catch (error: any) {
+      res.status(400).json({ 
+        success: false,
+        message: error.message 
+      });
+    }
+  });
+  
+  // Location Routes
+  app.get("/api/locations", async (req, res) => {
+    try {
+      const activeOnly = req.query.active === "true";
+      const locations = await storage.getLocations(activeOnly);
+      res.json(locations);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.get("/api/locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const location = await storage.getLocation(id);
+      
+      if (!location) {
+        return res.status(404).json({ message: "Location not found" });
+      }
+      
+      res.json(location);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.post("/api/locations", async (req, res) => {
+    try {
+      const locationData = req.body;
+      const location = await storage.createLocation(locationData);
+      res.status(201).json(location);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.patch("/api/locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const locationData = req.body;
+      const updatedLocation = await storage.updateLocation(id, locationData);
+      res.json(updatedLocation);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Loyalty Program Routes
+  app.get("/api/patients/:id/loyalty", async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const loyaltyPoints = await storage.getPatientLoyalty(patientId);
+      
+      if (!loyaltyPoints) {
+        return res.status(404).json({ 
+          message: "No loyalty account found for this patient",
+          points: 0,
+          level: "none"
+        });
+      }
+      
+      res.json(loyaltyPoints);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.get("/api/patients/:id/loyalty/transactions", async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      
+      const transactions = await storage.getLoyaltyTransactions(patientId, limit);
+      res.json(transactions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.post("/api/patients/:id/loyalty/add", async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const { points, type, source, sourceId, description } = req.body;
+      
+      if (!points || !type) {
+        return res.status(400).json({ message: "Points and type are required" });
+      }
+      
+      const loyaltyAccount = await storage.createOrUpdateLoyaltyPoints(
+        patientId,
+        parseInt(points),
+        type,
+        source,
+        sourceId,
+        description
+      );
+      
+      res.json(loyaltyAccount);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.post("/api/patients/:id/loyalty/redeem", async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const { points, description } = req.body;
+      
+      if (!points) {
+        return res.status(400).json({ message: "Points are required" });
+      }
+      
+      // Get current loyalty account
+      const loyaltyAccount = await storage.getPatientLoyalty(patientId);
+      
+      if (!loyaltyAccount || loyaltyAccount.points < points) {
+        return res.status(400).json({ message: "Insufficient loyalty points" });
+      }
+      
+      // Redeem points (negative points for redemption)
+      const updatedAccount = await storage.createOrUpdateLoyaltyPoints(
+        patientId,
+        -points,
+        "redeemed",
+        "manual_redemption",
+        undefined,
+        description || "Points redeemed"
+      );
+      
+      res.json(updatedAccount);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  // Enhanced Reporting Routes
+  app.get("/api/reports/revenue", async (req, res) => {
+    try {
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(new Date().setDate(new Date().getDate() - 30));
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+      const groupBy = (req.query.groupBy as 'day' | 'week' | 'month') || 'day';
+      
+      const revenueData = await storage.getRevenueByPeriod(startDate, endDate, groupBy);
+      
+      res.json(revenueData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.get("/api/reports/services", async (req, res) => {
+    try {
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(new Date().setDate(new Date().getDate() - 30));
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+      
+      const serviceData = await storage.getServicePopularity(startDate, endDate);
+      
+      res.json(serviceData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.get("/api/reports/retention", async (req, res) => {
+    try {
+      const periodMonths = req.query.months ? parseInt(req.query.months as string) : 6;
+      
+      const retentionData = await storage.getPatientRetention(periodMonths);
+      
+      res.json(retentionData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  app.get("/api/reports/staff", async (req, res) => {
+    try {
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(new Date().setDate(new Date().getDate() - 30));
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+      
+      const staffData = await storage.getStaffProductivity(startDate, endDate);
+      
+      res.json(staffData);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Generate appointment confirmation PDF
   app.get("/api/appointments/:id/pdf", async (req, res) => {
     try {

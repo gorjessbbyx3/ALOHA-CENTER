@@ -177,6 +177,471 @@ export class MemStorage implements IStorage {
       userId: patient.userId || null
     });
     
+
+  // Treatment Plan methods
+  async createTreatmentPlan(data: InsertTreatmentPlan): Promise<TreatmentPlan> {
+    try {
+      const [treatmentPlan] = await db.insert(schema.treatmentPlans).values(data).returning();
+      
+      // Log activity
+      await this.createActivity({
+        type: "treatment_plan_created",
+        description: `Created treatment plan "${data.name}" for patient ID ${data.patientId}`,
+        entityId: treatmentPlan.id,
+        entityType: "treatment_plan"
+      });
+      
+      return treatmentPlan;
+    } catch (error) {
+      console.error("Error creating treatment plan:", error);
+      throw error;
+    }
+  }
+  
+  async getTreatmentPlan(id: number): Promise<TreatmentPlan | null> {
+    try {
+      const [treatmentPlan] = await db.select().from(schema.treatmentPlans).where(eq(schema.treatmentPlans.id, id)).limit(1);
+      return treatmentPlan || null;
+    } catch (error) {
+      console.error("Error fetching treatment plan:", error);
+      throw error;
+    }
+  }
+  
+  async getTreatmentPlansByPatient(patientId: number): Promise<TreatmentPlan[]> {
+    try {
+      return await db.select().from(schema.treatmentPlans).where(eq(schema.treatmentPlans.patientId, patientId));
+    } catch (error) {
+      console.error("Error fetching patient treatment plans:", error);
+      throw error;
+    }
+  }
+  
+  async updateTreatmentPlan(id: number, data: Partial<TreatmentPlan>): Promise<TreatmentPlan> {
+    try {
+      const [updatedPlan] = await db
+        .update(schema.treatmentPlans)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(schema.treatmentPlans.id, id))
+        .returning();
+      
+      // Log activity
+      await this.createActivity({
+        type: "treatment_plan_updated",
+        description: `Updated treatment plan "${updatedPlan.name}"`,
+        entityId: updatedPlan.id,
+        entityType: "treatment_plan"
+      });
+      
+      return updatedPlan;
+    } catch (error) {
+      console.error("Error updating treatment plan:", error);
+      throw error;
+    }
+  }
+  
+  // Gift Card methods
+  async createGiftCard(data: InsertGiftCard): Promise<GiftCard> {
+    try {
+      // Generate a unique code if not provided
+      if (!data.code) {
+        data.code = `GC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      }
+      
+      // Set remaining balance equal to amount if not specified
+      if (!data.remainingBalance) {
+        data.remainingBalance = data.amount;
+      }
+      
+      const [giftCard] = await db.insert(schema.giftCards).values(data).returning();
+      
+      // Log activity
+      await this.createActivity({
+        type: "gift_card_created",
+        description: `Created gift card with code ${data.code} for $${data.amount}`,
+        entityId: giftCard.id,
+        entityType: "gift_card"
+      });
+      
+      return giftCard;
+    } catch (error) {
+      console.error("Error creating gift card:", error);
+      throw error;
+    }
+  }
+  
+  async getGiftCard(id: number): Promise<GiftCard | null> {
+    try {
+      const [giftCard] = await db.select().from(schema.giftCards).where(eq(schema.giftCards.id, id)).limit(1);
+      return giftCard || null;
+    } catch (error) {
+      console.error("Error fetching gift card:", error);
+      throw error;
+    }
+  }
+  
+  async getGiftCardByCode(code: string): Promise<GiftCard | null> {
+    try {
+      const [giftCard] = await db.select().from(schema.giftCards).where(eq(schema.giftCards.code, code)).limit(1);
+      return giftCard || null;
+    } catch (error) {
+      console.error("Error fetching gift card by code:", error);
+      throw error;
+    }
+  }
+  
+  async useGiftCard(code: string, amount: number): Promise<GiftCard> {
+    try {
+      const giftCard = await this.getGiftCardByCode(code);
+      
+      if (!giftCard) {
+        throw new Error("Gift card not found");
+      }
+      
+      if (giftCard.status !== "active") {
+        throw new Error(`Gift card is ${giftCard.status}`);
+      }
+      
+      const remainingBalance = parseFloat(giftCard.remainingBalance.toString()) - amount;
+      
+      if (remainingBalance < 0) {
+        throw new Error("Insufficient gift card balance");
+      }
+      
+      const [updatedCard] = await db
+        .update(schema.giftCards)
+        .set({ 
+          remainingBalance: remainingBalance.toString(), 
+          lastUsed: new Date(),
+          status: remainingBalance === 0 ? "used" : "active"
+        })
+        .where(eq(schema.giftCards.id, giftCard.id))
+        .returning();
+      
+      // Log activity
+      await this.createActivity({
+        type: "gift_card_used",
+        description: `Used $${amount} from gift card ${code}. Remaining balance: $${remainingBalance}`,
+        entityId: giftCard.id,
+        entityType: "gift_card"
+      });
+      
+      return updatedCard;
+    } catch (error) {
+      console.error("Error using gift card:", error);
+      throw error;
+    }
+  }
+  
+  // Location methods
+  async createLocation(data: InsertLocation): Promise<Location> {
+    try {
+      const [location] = await db.insert(schema.locations).values(data).returning();
+      
+      // Log activity
+      await this.createActivity({
+        type: "location_created",
+        description: `Created new location "${data.name}" at ${data.address}`,
+        entityId: location.id,
+        entityType: "location"
+      });
+      
+      return location;
+    } catch (error) {
+      console.error("Error creating location:", error);
+      throw error;
+    }
+  }
+  
+  async getLocation(id: number): Promise<Location | null> {
+    try {
+      const [location] = await db.select().from(schema.locations).where(eq(schema.locations.id, id)).limit(1);
+      return location || null;
+    } catch (error) {
+      console.error("Error fetching location:", error);
+      throw error;
+    }
+  }
+  
+  async getLocations(activeOnly: boolean = false): Promise<Location[]> {
+    try {
+      let query = db.select().from(schema.locations);
+      
+      if (activeOnly) {
+        query = query.where(eq(schema.locations.isActive, true));
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error("Error fetching locations:", error);
+      throw error;
+    }
+  }
+  
+  async updateLocation(id: number, data: Partial<Location>): Promise<Location> {
+    try {
+      const [updatedLocation] = await db
+        .update(schema.locations)
+        .set(data)
+        .where(eq(schema.locations.id, id))
+        .returning();
+      
+      // Log activity
+      await this.createActivity({
+        type: "location_updated",
+        description: `Updated location "${updatedLocation.name}"`,
+        entityId: updatedLocation.id,
+        entityType: "location"
+      });
+      
+      return updatedLocation;
+    } catch (error) {
+      console.error("Error updating location:", error);
+      throw error;
+    }
+  }
+  
+  // Loyalty Program methods
+  async getPatientLoyalty(patientId: number): Promise<LoyaltyPoints | null> {
+    try {
+      const [loyaltyPoints] = await db
+        .select()
+        .from(schema.loyaltyPoints)
+        .where(eq(schema.loyaltyPoints.patientId, patientId))
+        .limit(1);
+      
+      return loyaltyPoints || null;
+    } catch (error) {
+      console.error("Error fetching patient loyalty points:", error);
+      throw error;
+    }
+  }
+  
+  async createOrUpdateLoyaltyPoints(patientId: number, points: number, type: string, source: string = "", sourceId?: number, description: string = ""): Promise<LoyaltyPoints> {
+    try {
+      let loyaltyAccount = await this.getPatientLoyalty(patientId);
+      
+      if (!loyaltyAccount) {
+        // Create new loyalty account
+        const [newAccount] = await db
+          .insert(schema.loyaltyPoints)
+          .values({
+            patientId,
+            points: points > 0 ? points : 0,
+            totalEarned: points > 0 ? points : 0,
+            level: "bronze"
+          })
+          .returning();
+        
+        loyaltyAccount = newAccount;
+      } else {
+        // Update existing account
+        const newPoints = points + Number(loyaltyAccount.points);
+        const newTotalEarned = points > 0 ? Number(loyaltyAccount.totalEarned) + points : Number(loyaltyAccount.totalEarned);
+        
+        // Determine loyalty level based on total points earned
+        let level = loyaltyAccount.level;
+        if (newTotalEarned >= 1000) {
+          level = "platinum";
+        } else if (newTotalEarned >= 500) {
+          level = "gold";
+        } else if (newTotalEarned >= 200) {
+          level = "silver";
+        }
+        
+        const [updatedAccount] = await db
+          .update(schema.loyaltyPoints)
+          .set({
+            points: newPoints < 0 ? 0 : newPoints,
+            totalEarned: newTotalEarned,
+            level,
+            updatedAt: new Date()
+          })
+          .where(eq(schema.loyaltyPoints.id, loyaltyAccount.id))
+          .returning();
+        
+        loyaltyAccount = updatedAccount;
+      }
+      
+      // Record the transaction
+      await db.insert(schema.loyaltyTransactions).values({
+        patientId,
+        points,
+        type,
+        source,
+        sourceId,
+        description
+      });
+      
+      // Log activity
+      await this.createActivity({
+        type: `loyalty_points_${type}`,
+        description: `${points > 0 ? "Added" : "Deducted"} ${Math.abs(points)} loyalty points ${description ? "- " + description : ""}`,
+        entityId: patientId,
+        entityType: "patient"
+      });
+      
+      return loyaltyAccount;
+    } catch (error) {
+      console.error("Error updating loyalty points:", error);
+      throw error;
+    }
+  }
+  
+  async getLoyaltyTransactions(patientId: number, limit: number = 20): Promise<LoyaltyTransaction[]> {
+    try {
+      return await db
+        .select()
+        .from(schema.loyaltyTransactions)
+        .where(eq(schema.loyaltyTransactions.patientId, patientId))
+        .orderBy(desc(schema.loyaltyTransactions.createdAt))
+        .limit(limit);
+    } catch (error) {
+      console.error("Error fetching loyalty transactions:", error);
+      throw error;
+    }
+  }
+  
+  // Enhanced Reporting
+  async getRevenueByPeriod(startDate: Date, endDate: Date, groupBy: 'day' | 'week' | 'month' = 'day'): Promise<any[]> {
+    try {
+      // Format will vary based on database type; this implementation is PostgreSQL specific
+      let dateFormat;
+      switch (groupBy) {
+        case 'day':
+          dateFormat = 'YYYY-MM-DD';
+          break;
+        case 'week':
+          dateFormat = 'YYYY-"W"IW'; // ISO week format
+          break;
+        case 'month':
+          dateFormat = 'YYYY-MM';
+          break;
+      }
+      
+      const result = await db.execute(sql`
+        SELECT 
+          TO_CHAR(date, ${dateFormat}) as period,
+          SUM(CAST(amount AS NUMERIC)) as revenue
+        FROM 
+          payments
+        WHERE 
+          date BETWEEN ${startDate.toISOString()} AND ${endDate.toISOString()}
+        GROUP BY 
+          period
+        ORDER BY 
+          period
+      `);
+      
+      return result.rows;
+    } catch (error) {
+      console.error("Error fetching revenue by period:", error);
+      throw error;
+    }
+  }
+  
+  async getServicePopularity(startDate: Date, endDate: Date): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          s.id,
+          s.name,
+          COUNT(a.id) as count,
+          SUM(CAST(p.amount AS NUMERIC)) as revenue
+        FROM 
+          appointments a
+        JOIN 
+          services s ON a.service_id = s.id
+        LEFT JOIN 
+          payments p ON a.id = p.appointment_id
+        WHERE 
+          a.date BETWEEN ${startDate.toISOString()} AND ${endDate.toISOString()}
+          AND a.status = 'completed'
+        GROUP BY 
+          s.id, s.name
+        ORDER BY 
+          count DESC
+      `);
+      
+      return result.rows;
+    } catch (error) {
+      console.error("Error fetching service popularity:", error);
+      throw error;
+    }
+  }
+  
+  async getPatientRetention(periodMonths: number = 6): Promise<any> {
+    try {
+      const now = new Date();
+      const startDate = new Date();
+      startDate.setMonth(now.getMonth() - periodMonths);
+      
+      const result = await db.execute(sql`
+        WITH patient_appointments AS (
+          SELECT 
+            patient_id,
+            COUNT(id) as appointment_count,
+            MIN(date) as first_appointment,
+            MAX(date) as last_appointment
+          FROM 
+            appointments
+          WHERE 
+            patient_id IS NOT NULL
+          GROUP BY 
+            patient_id
+        )
+        SELECT 
+          COUNT(*) as total_patients,
+          SUM(CASE WHEN appointment_count > 1 THEN 1 ELSE 0 END) as returning_patients,
+          ROUND((SUM(CASE WHEN appointment_count > 1 THEN 1 ELSE 0 END)::NUMERIC / COUNT(*)::NUMERIC) * 100, 2) as retention_rate
+        FROM 
+          patient_appointments
+        WHERE 
+          first_appointment >= ${startDate.toISOString()}
+      `);
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error("Error calculating patient retention:", error);
+      throw error;
+    }
+  }
+  
+  async getStaffProductivity(startDate: Date, endDate: Date): Promise<any[]> {
+    try {
+      // For this to work properly, we would need a staff_id field in appointments
+      // This is a placeholder implementation
+      const result = await db.execute(sql`
+        SELECT 
+          u.id,
+          u.name,
+          COUNT(a.id) as appointment_count,
+          SUM(s.duration) as total_minutes,
+          SUM(CAST(p.amount AS NUMERIC)) as revenue
+        FROM 
+          users u
+        LEFT JOIN 
+          appointments a ON a.user_id = u.id
+        LEFT JOIN
+          services s ON a.service_id = s.id
+        LEFT JOIN
+          payments p ON a.id = p.appointment_id
+        WHERE 
+          u.role IN ('admin', 'provider')
+          AND (a.date IS NULL OR a.date BETWEEN ${startDate.toISOString()} AND ${endDate.toISOString()})
+        GROUP BY 
+          u.id, u.name
+        ORDER BY 
+          appointment_count DESC
+      `);
+      
+      return result.rows;
+    } catch (error) {
+      console.error("Error fetching staff productivity:", error);
+      throw error;
+    }
+  }
+
     return patient;
   }
   

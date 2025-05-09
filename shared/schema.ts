@@ -132,6 +132,134 @@ export const payments = pgTable("payments", {
 
 export const insertPaymentSchema = createInsertSchema(payments)
   .pick({
+
+// Treatment Plan schema
+export const treatmentPlans = pgTable("treatment_plans", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").references(() => patients.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  status: text("status").notNull().default("active"),
+  goals: text("goals"),
+  notes: text("notes"),
+  progress: text("progress"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTreatmentPlanSchema = createInsertSchema(treatmentPlans).pick({
+  patientId: true,
+  name: true,
+  description: true,
+  startDate: true,
+  endDate: true,
+  status: true,
+  goals: true,
+  notes: true,
+  progress: true,
+});
+
+export type InsertTreatmentPlan = z.infer<typeof insertTreatmentPlanSchema>;
+export type TreatmentPlan = typeof treatmentPlans.$inferSelect;
+
+// Gift Card schema
+export const giftCards = pgTable("gift_cards", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  amount: numeric("amount").notNull(),
+  remainingBalance: numeric("remaining_balance").notNull(),
+  issuedTo: text("issued_to"),
+  issuedEmail: text("issued_email"),
+  purchasedBy: integer("purchased_by").references(() => patients.id),
+  status: text("status").notNull().default("active"),
+  expiryDate: timestamp("expiry_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUsed: timestamp("last_used"),
+});
+
+export const insertGiftCardSchema = createInsertSchema(giftCards).pick({
+  code: true,
+  amount: true,
+  remainingBalance: true,
+  issuedTo: true,
+  issuedEmail: true,
+  purchasedBy: true,
+  status: true,
+  expiryDate: true,
+});
+
+export type InsertGiftCard = z.infer<typeof insertGiftCardSchema>;
+export type GiftCard = typeof giftCards.$inferSelect;
+
+// Locations schema
+export const locations = pgTable("locations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  address: text("address").notNull(),
+  phone: text("phone"),
+  email: text("email"),
+  isActive: boolean("is_active").default(true),
+  timezone: text("timezone").default("America/Los_Angeles"),
+  businessHours: text("business_hours"),
+});
+
+export const insertLocationSchema = createInsertSchema(locations).pick({
+  name: true,
+  address: true,
+  phone: true,
+  email: true,
+  isActive: true,
+  timezone: true,
+  businessHours: true,
+});
+
+export type InsertLocation = z.infer<typeof insertLocationSchema>;
+export type Location = typeof locations.$inferSelect;
+
+// Loyalty Program schema
+export const loyaltyPoints = pgTable("loyalty_points", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").references(() => patients.id).notNull(),
+  points: integer("points").notNull().default(0),
+  totalEarned: integer("total_earned").notNull().default(0),
+  level: text("level").default("bronze"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const loyaltyTransactions = pgTable("loyalty_transactions", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").references(() => patients.id).notNull(),
+  points: integer("points").notNull(),
+  type: text("type").notNull(), // earned, redeemed, expired, etc.
+  source: text("source"), // appointment, referral, promotion, etc.
+  sourceId: integer("source_id"), // ID of appointment, etc. if applicable
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertLoyaltyPointsSchema = createInsertSchema(loyaltyPoints).pick({
+  patientId: true,
+  points: true,
+  totalEarned: true,
+  level: true,
+});
+
+export const insertLoyaltyTransactionSchema = createInsertSchema(loyaltyTransactions).pick({
+  patientId: true,
+  points: true,
+  type: true,
+  source: true,
+  sourceId: true,
+  description: true,
+});
+
+export type InsertLoyaltyPoints = z.infer<typeof insertLoyaltyPointsSchema>;
+export type LoyaltyPoints = typeof loyaltyPoints.$inferSelect;
+export type InsertLoyaltyTransaction = z.infer<typeof insertLoyaltyTransactionSchema>;
+export type LoyaltyTransaction = typeof loyaltyTransactions.$inferSelect;
+
     appointmentId: true,
     patientId: true,
     amount: true,

@@ -27,6 +27,13 @@ type Product = {
 };
 
 type Customer = {
+
+  const [giftCardCode, setGiftCardCode] = useState("");
+  const [giftCardAmount, setGiftCardAmount] = useState("");
+  const [giftCardInfo, setGiftCardInfo] = useState(null);
+  const [giftCardError, setGiftCardError] = useState("");
+  const [isValidatingGiftCard, setIsValidatingGiftCard] = useState(false);
+
   id: number;
   name: string;
   email?: string;
@@ -80,6 +87,65 @@ export const PosTile = () => {
     error: customersError
   } = useQuery<Customer[]>({ 
     queryKey: ['/api/pos/customers'],
+
+  const validateGiftCard = async () => {
+    if (!giftCardCode) return;
+    
+    setIsValidatingGiftCard(true);
+    setGiftCardError("");
+    
+    try {
+      const response = await fetch(`/api/gift-cards/validate/${giftCardCode}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setGiftCardError(data.message || "Invalid gift card code");
+        setGiftCardInfo(null);
+      } else {
+        setGiftCardInfo(data.giftCard);
+      }
+    } catch (error) {
+      setGiftCardError("Error validating gift card");
+      setGiftCardInfo(null);
+    } finally {
+      setIsValidatingGiftCard(false);
+    }
+  };
+  
+  const applyGiftCard = () => {
+    if (!giftCardInfo || !giftCardAmount) return;
+    
+    const amount = parseFloat(giftCardAmount);
+    
+    // Apply gift card amount to total
+    if (amount > parseFloat(giftCardInfo.remainingBalance)) {
+      setGiftCardError("Amount exceeds available balance");
+      return;
+    }
+    
+    // Update the total and add to cart
+    setCart([
+      ...cart,
+      {
+        id: `gc-${giftCardInfo.id}`,
+        name: `Gift Card (${giftCardInfo.code})`,
+        price: -amount,
+        quantity: 1,
+        category: "payment"
+      }
+    ]);
+    
+    // Reset gift card fields
+    setGiftCardCode("");
+    setGiftCardAmount("");
+    setGiftCardInfo(null);
+    
+    toast({
+      title: "Gift card applied",
+      description: `$${amount.toFixed(2)} applied from gift card`
+    });
+  };
+
     queryFn: async () => {
       const res = await fetch('/api/pos/customers');
       if (!res.ok) throw new Error('Failed to load customers');
@@ -217,6 +283,60 @@ export const PosTile = () => {
 
   const calculateTax = () => {
     return (getCartTotal() - getDiscountAmount()) * 0.08; // Assuming 8% tax
+
+{/* Gift Card Redemption */}
+            <div className="mt-4 border-t pt-4">
+              <h3 className="font-medium mb-2">Apply Gift Card</h3>
+              <div className="flex space-x-2">
+                <Input
+                  placeholder="Enter gift card code"
+                  value={giftCardCode}
+                  onChange={(e) => setGiftCardCode(e.target.value)}
+                />
+                <Button 
+                  variant="outline" 
+                  disabled={!giftCardCode || isValidatingGiftCard}
+                  onClick={validateGiftCard}
+                >
+                  {isValidatingGiftCard ? "Checking..." : "Apply"}
+                </Button>
+              </div>
+              
+              {giftCardError && (
+                <p className="text-sm text-red-500 mt-1">{giftCardError}</p>
+              )}
+              
+              {giftCardInfo && (
+                <div className="mt-2 p-2 border rounded bg-muted/30">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Gift Card Balance:</span>
+                    <span className="text-sm">${parseFloat(giftCardInfo.remainingBalance).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-sm">Amount to apply:</span>
+                    <Input
+                      type="number"
+                      className="w-24 h-8 text-sm"
+                      min="0.01"
+                      max={parseFloat(giftCardInfo.remainingBalance)}
+                      step="0.01"
+                      value={giftCardAmount}
+                      onChange={(e) => setGiftCardAmount(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full mt-2"
+                    disabled={!giftCardAmount || parseFloat(giftCardAmount) <= 0}
+                    onClick={applyGiftCard}
+                  >
+                    Apply to Order
+                  </Button>
+                </div>
+              )}
+            </div>
+
   };
 
   const getFinalTotal = () => {

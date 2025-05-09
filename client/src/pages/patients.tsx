@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+
+import { Award, ClipboardList } from "lucide-react";
+import { LoyaltyCard } from "@/components/loyalty/loyalty-card";
+import { TreatmentPlanForm } from "@/components/treatment/treatment-plan-form";
+
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -127,6 +132,16 @@ export default function Patients() {
         <Button onClick={() => setIsPatientFormOpen(true)}>Add New Patient</Button>
       </div>
       
+
+<TabsTrigger value="treatment-plans" className="flex items-center">
+                  <ClipboardList className="h-4 w-4 mr-2" />
+                  Treatment Plans
+                </TabsTrigger>
+                <TabsTrigger value="loyalty" className="flex items-center">
+                  <Award className="h-4 w-4 mr-2" />
+                  Loyalty
+                </TabsTrigger>
+
       {/* Patient List */}
       <Card>
         <CardHeader>
@@ -164,6 +179,90 @@ export default function Patients() {
                         {patient.lastVisit ? format(new Date(patient.lastVisit), "MMM d, yyyy") : "No visits"}
                       </td>
                       <td className="py-3 px-4">
+
+<TabsContent value="treatment-plans" className="py-4">
+              <div className="flex justify-between mb-4">
+                <h3 className="text-lg font-medium">Treatment Plans</h3>
+                <Button onClick={() => setIsTreatmentPlanFormOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Treatment Plan
+                </Button>
+              </div>
+
+              {treatmentPlans?.length === 0 ? (
+                <div className="text-center py-12 border rounded-lg">
+                  <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Treatment Plans</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Create a treatment plan to track patient progress and goals.
+                  </p>
+                  <Button onClick={() => setIsTreatmentPlanFormOpen(true)}>
+                    Create Treatment Plan
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {treatmentPlans.map((plan) => (
+                    <Card key={plan.id}>
+                      <CardHeader>
+                        <CardTitle className="flex justify-between">
+                          <div className="flex items-center">
+                            <span>{plan.name}</span>
+                            <Badge 
+                              variant={plan.status === "active" ? "default" : "outline"}
+                              className="ml-2"
+                            >
+                              {plan.status}
+                            </Badge>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTreatmentPlan(plan);
+                              setIsTreatmentPlanFormOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </CardTitle>
+                        <CardDescription>
+                          {new Date(plan.startDate).toLocaleDateString()} 
+                          {plan.endDate && ` to ${new Date(plan.endDate).toLocaleDateString()}`}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {plan.description && (
+                          <div>
+                            <h4 className="text-sm font-medium mb-1">Description</h4>
+                            <p className="text-sm text-muted-foreground">{plan.description}</p>
+                          </div>
+                        )}
+
+                        {plan.goals && (
+                          <div>
+                            <h4 className="text-sm font-medium mb-1">Goals</h4>
+                            <ul className="list-disc list-inside text-sm text-muted-foreground">
+                              {JSON.parse(plan.goals).map((goal: string, index: number) => (
+                                <li key={index}>{goal}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {plan.progress && (
+                          <div>
+                            <h4 className="text-sm font-medium mb-1">Progress Notes</h4>
+                            <p className="text-sm text-muted-foreground">{plan.progress}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
                         <Badge 
                           className={cn(
                             patient.status === 'active' ? 'bg-green-100 text-green-800' :
@@ -177,6 +276,11 @@ export default function Patients() {
                            patient.status}
                         </Badge>
                       </td>
+
+<TabsContent value="loyalty" className="py-4">
+              <LoyaltyCard patientId={selectedPatient.id} patientName={selectedPatient.name} />
+            </TabsContent>
+
                       <td className="py-3 px-4">
                         <Button variant="ghost" size="sm" onClick={() => handleOpenPatientDetails(patient.id)}>
                           View

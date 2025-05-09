@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+
+import { EnhancedReports } from "@/components/analytics/enhanced-reports";
+
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { CalendarView } from "@/components/dashboard/calendar-view";
@@ -132,3 +135,19 @@ export default function Dashboard() {
     </AdminLayout>
   );
 }
+
+
+<Dialog>
+                <DialogTrigger asChild>
+                  <Button className="mt-4">View Enhanced Reports</Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-6xl w-[90vw] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Enhanced Analytics & Reports</DialogTitle>
+                    <DialogDescription>
+                      Comprehensive analytics and reports for your clinic's performance
+                    </DialogDescription>
+                  </DialogHeader>
+                  <EnhancedReports />
+                </DialogContent>
+              </Dialog>

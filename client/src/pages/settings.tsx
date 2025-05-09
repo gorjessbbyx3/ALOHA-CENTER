@@ -7,6 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { MapPin } from "lucide-react";
+import { LocationForm } from "@/components/location/location-form";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
@@ -71,6 +75,89 @@ export default function Settings() {
                     <Input id="email" type="email" defaultValue="contact@medibook.com" />
                   </div>
                 </div>
+
+{/* Location Management Tab */}
+          <TabsContent value="locations" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex justify-between">
+                  <div>Clinic Locations</div>
+                  <Button onClick={() => setIsLocationFormOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Location
+                  </Button>
+                </CardTitle>
+                <CardDescription>
+                  Manage multiple clinic locations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLocationsLoading ? (
+                  <div className="py-4 text-center animate-pulse">Loading locations...</div>
+                ) : locations?.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No locations found</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Add your first clinic location to enable multi-location scheduling.
+                    </p>
+                    <Button onClick={() => setIsLocationFormOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Location
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {locations.map((location) => (
+                      <div
+                        key={location.id}
+                        className="py-4 flex items-center justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center">
+                            <h3 className="font-medium">{location.name}</h3>
+                            {!location.isActive && (
+                              <Badge variant="outline" className="ml-2">
+                                Inactive
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {location.address}
+                          </p>
+                          {location.phone && (
+                            <p className="text-sm text-muted-foreground">
+                              {location.phone}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedLocation(location);
+                              setIsLocationFormOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant={location.isActive ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => toggleLocationStatus(location)}
+                          >
+                            {location.isActive ? "Deactivate" : "Activate"}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">

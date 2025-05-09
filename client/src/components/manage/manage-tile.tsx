@@ -7,6 +7,9 @@ import {
   Palette, Type, LayoutGrid, Eye, EyeOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+import { GiftCardForm } from "@/components/gift-card/gift-card-form";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +30,9 @@ export const ManageTile = () => {
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("services");
   const { toast } = useToast();
+
+  const [isGiftCardFormOpen, setIsGiftCardFormOpen] = useState(false);
+
   
   // Welcome text and dashboard options state
   const [welcomeText, setWelcomeText] = useState("Welcome to your Admin dashboard");
@@ -257,6 +263,30 @@ export const ManageTile = () => {
                     ))}
                     
                     {rooms.length === 0 && (
+
+{/* Gift Cards Section */}
+              <div className="space-y-1">
+                <h3 className="font-medium">Gift Cards</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={() => setIsGiftCardFormOpen(true)}
+                  >
+                    <Gift className="h-4 w-4 mr-2" />
+                    Create Gift Card
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={() => alert("This would open a gift card lookup and management screen")}
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    Find Gift Card
+                  </Button>
+                </div>
+              </div>
+
                       <div className="flex flex-col items-center justify-center h-40 col-span-2">
                         <DoorOpen className="h-10 w-10 text-muted-foreground mb-2" />
                         <p className="text-muted-foreground">No rooms available</p>
@@ -370,6 +400,13 @@ export const ManageTile = () => {
                               <span className="bg-purple-100 text-purple-800 px-2 py-0.5 text-xs rounded-full mr-2">Tech</span>
                               <span className="text-sm">View only</span>
                             </div>
+
+      {/* Gift Card Form Dialog */}
+      <GiftCardForm 
+        open={isGiftCardFormOpen} 
+        onOpenChange={setIsGiftCardFormOpen} 
+      />
+
                           </div>
                         </div>
                         
