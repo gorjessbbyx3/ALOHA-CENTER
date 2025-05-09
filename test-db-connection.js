@@ -105,9 +105,8 @@ if (process.env.DB_TYPE === 'memory') {
   
   // Try to resolve the hostname first to check DNS
 import { promises as dns } from 'dns';
-
-// Run more detailed network diagnostics
 import { exec } from 'child_process';
+import net from 'net';
 
 console.log(`Running network diagnostics to ${dbConfig.host}:${dbConfig.port}...`);
 
@@ -128,7 +127,6 @@ dns.lookup(dbConfig.host)
   .then(() => {
     // Try a TCP connection check with timeout
     console.log(`Testing TCP connection to ${dbConfig.host}:${dbConfig.port}...`);
-    import net from 'net';
     return new Promise((resolve, reject) => {
       const socket = new net.Socket();
       socket.setTimeout(5000);
