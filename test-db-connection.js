@@ -88,8 +88,8 @@ if (process.env.DB_TYPE === 'memory') {
   }
   
   // Try to connect using raw pg
-  const { Pool } = require('pg');
-  const pool = new Pool({
+  // Create a new pool with the same connection as above
+  const secondPool = new Pool({
     host: process.env.DB_ENDPOINT || 'database-alohacenter.cshguag6ii9q.us-east-1.rds.amazonaws.com',
     port: Number(process.env.DB_PORT || '5432'),
     database: process.env.DB_NAME || 'clinic_management',
@@ -100,7 +100,7 @@ if (process.env.DB_TYPE === 'memory') {
     }
   });
   
-  pool.query('SELECT NOW()')
+  secondPool.query('SELECT NOW()')
     .then(res => {
       console.log('🟢 Successfully connected to PostgreSQL!');
       console.log('Time from database:', res.rows[0].now);
