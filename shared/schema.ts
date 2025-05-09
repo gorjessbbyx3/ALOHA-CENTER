@@ -179,7 +179,23 @@ export type InsertRoom = z.infer<typeof insertRoomSchema>;
 export type Room = typeof rooms.$inferSelect;
 
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
-export type Appointment = typeof appointments.$inferSelect;
+export type Appointment = {
+  id: number;
+  patientId: number | null;
+  serviceId: number;
+  date: string; // ISO date string
+  time: string; // 24hr format HH:MM
+  duration: number; // minutes
+  status: string; // scheduled, checked-in, completed, canceled
+  notes?: string;
+  paymentStatus: string; // pending, paid
+  paymentAmount?: number;
+  paymentMethod?: string;
+  intakeFormStatus?: string; // not_started, skipped, completed
+  intakeFormTimestamp?: string; // ISO date string when intake form was completed/skipped
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+};
 
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;

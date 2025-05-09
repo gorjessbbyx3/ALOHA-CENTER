@@ -157,6 +157,30 @@ export function AppointmentDetails({ appointmentId, open, onOpenChange }: Appoin
                 </p>
               </div>
               
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Intake Form</p>
+                <div className="flex items-center">
+                  {appointment.intakeFormStatus === 'completed' ? (
+                    <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                  ) : appointment.intakeFormStatus === 'skipped' ? (
+                    <Badge className="bg-yellow-100 text-yellow-800">Skipped</Badge>
+                  ) : (
+                    <Badge className="bg-gray-100 text-gray-800">Not Started</Badge>
+                  )}
+                  
+                  {appointment.intakeFormStatus && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="ml-2 h-6 px-2"
+                      onClick={() => window.open(`/intake-form/${appointmentId}?view=true`, '_blank')}
+                    >
+                      {appointment.intakeFormStatus === 'completed' ? 'View' : 'Complete'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
               {appointment.notes && (
                 <div className="col-span-2 space-y-1">
                   <p className="text-sm font-medium text-gray-500">Notes</p>

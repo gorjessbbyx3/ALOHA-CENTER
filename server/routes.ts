@@ -25,13 +25,13 @@ const stripe = process.env.STRIPE_SECRET_KEY
 // Function to seed initial data
 async function seedInitialData() {
   console.log("Checking if initial data needs to be seeded...");
-  
+
   // Check if we have any services
   const existingServices = await db.select().from(services);
-  
+
   if (existingServices.length === 0) {
     console.log("Seeding initial services data...");
-    
+
     // Seed services
     await db.insert(services).values([
       { name: "General Consultation", description: "Regular checkup", duration: 30, price: "50" },
@@ -45,14 +45,13 @@ async function seedInitialData() {
       { name: "Reiki Session (30min)", description: "30-minute Reiki energy healing session in a private room", duration: 30, price: "100" }
     ]);
   }
-</old_str>
-  
+
   // Check if we have admin user
   const existingUsers = await db.select().from(users);
-  
+
   if (existingUsers.length === 0) {
     console.log("Seeding initial admin user...");
-    
+
     // Create admin user
     await db.insert(users).values({
       username: "admin",
@@ -62,7 +61,7 @@ async function seedInitialData() {
       role: "admin"
     });
   }
-  
+
   console.log("Initial data seeding complete");
 }
 
@@ -102,10 +101,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Seed initial rooms
   try {
     const existingRooms = await db.select().from(rooms);
-    
+
     if (existingRooms.length === 0) {
       console.log("Seeding initial rooms data...");
-      
+
       // Seed rooms
       await db.insert(rooms).values([
         { name: "Room 101", description: "Main treatment room", capacity: 1, isActive: true },
@@ -117,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.error("Error seeding rooms:", error);
   }
-  
+
   // Dashboard stats
   app.get("/api/stats", async (req, res) => {
     try {
@@ -127,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Get all services
   app.get("/api/services", async (req, res) => {
     try {
@@ -137,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Get all rooms
   app.get("/api/rooms", async (req, res) => {
     try {
@@ -148,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Get all patients
   app.get("/api/patients", async (req, res) => {
     try {
@@ -158,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Get specific patient
   app.get("/api/patients/:id", async (req, res) => {
     try {
@@ -172,7 +171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Create patient
   app.post("/api/patients", async (req, res) => {
     try {
@@ -189,27 +188,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Get appointments by date
   app.get("/api/appointments", async (req, res) => {
     try {
       const date = req.query.date ? new Date(req.query.date as string) : new Date();
       const roomId = req.query.roomId ? parseInt(req.query.roomId as string) : undefined;
-      
+
       let appointments;
-      
+
       if (roomId) {
         appointments = await storage.getAppointmentsByRoom(roomId, date);
       } else {
         appointments = await storage.getAppointmentsByDate(date);
       }
-      
+
       res.json(appointments);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Get specific appointment
   app.get("/api/appointments/:id", async (req, res) => {
     try {
@@ -223,13 +222,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Create appointment
   app.post("/api/appointments", async (req, res) => {
     try {
       const appointmentData = insertAppointmentSchema.parse(req.body);
       const appointment = await storage.createAppointment(appointmentData);
-      
+
       // Send email confirmation if patient has email
       try {
         if (appointment.patientId) {
@@ -241,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (emailError) {
         console.error("Failed to send email confirmation:", emailError);
       }
-      
+
       res.status(201).json(appointment);
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -253,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Update appointment
   app.patch("/api/appointments/:id", async (req, res) => {
     try {
@@ -262,7 +261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!appointment) {
         return res.status(404).json({ message: "Appointment not found" });
       }
-      
+
       const appointmentData = req.body;
       const updatedAppointment = await storage.updateAppointment(id, appointmentData);
       res.json(updatedAppointment);
@@ -270,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Cancel appointment
   app.post("/api/appointments/:id/cancel", async (req, res) => {
     try {
@@ -279,20 +278,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!appointment) {
         return res.status(404).json({ message: "Appointment not found" });
       }
-      
+
       const canceledAppointment = await storage.cancelAppointment(id);
       res.json(canceledAppointment);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
+  // Update intake form status
+  app.post('/api/appointments/:id/intake-form', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, timestamp } = req.body;
+
+      if (!['completed', 'skipped'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid intake form status' });
+      }
+
+      // Update appointment with intake form status
+      await storage.updateAppointment(id, {
+        intakeFormStatus: status,
+        intakeFormTimestamp: timestamp || new Date().toISOString()
+      });
+
+      // Add to activity log
+      await storage.createActivity({
+        type: 'intake_form_updated',
+        description: JSON.stringify({
+          appointmentId: id,
+          status: status
+        }),
+        entityId: id,
+        entityType: 'appointment'
+      });
+
+      res.status(200).json({ success: true });
+    } catch (error: any) {
+      console.error('Error updating intake form status:', error);
+      res.status(500).json({ error: 'Failed to update intake form status', message: error.message });
+    }
+  });
+
   // Get payments
   app.get("/api/payments", async (req, res) => {
     try {
       const patientId = req.query.patientId ? parseInt(req.query.patientId as string) : undefined;
       const appointmentId = req.query.appointmentId ? parseInt(req.query.appointmentId as string) : undefined;
-      
+
       let payments = [];
       if (patientId) {
         payments = await storage.getPaymentsByPatient(patientId);
@@ -301,39 +334,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         return res.status(400).json({ message: "Must provide patientId or appointmentId" });
       }
-      
+
       res.json(payments);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Stripe payment intent
   app.post("/api/create-payment-intent", async (req, res) => {
     if (!stripe) {
       return res.status(500).json({ message: "Stripe is not configured" });
     }
-    
+
     try {
       const { amount, appointmentId, patientId } = req.body;
-      
+
       if (!amount || !appointmentId || !patientId) {
         return res.status(400).json({ 
           message: "Missing required fields: amount, appointmentId, and patientId are required" 
         });
       }
-      
+
       // Make sure appointmentId and patientId exist
       const appointment = await storage.getAppointment(appointmentId);
       if (!appointment) {
         return res.status(404).json({ message: "Appointment not found" });
       }
-      
+
       const patient = await storage.getPatient(patientId);
       if (!patient) {
         return res.status(404).json({ message: "Patient not found" });
       }
-      
+
       const paymentIntent = await stripe.paymentIntents.create({
         amount, // Amount should already be in cents from the client
         currency: "usd",
@@ -344,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         description: `Payment for appointment #${appointmentId} - ${patient.name}`,
       });
-      
+
       // Log the payment intent creation
       await storage.createActivity({
         type: "payment_intent_created",
@@ -352,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId: appointmentId,
         entityType: "appointment"
       });
-      
+
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
       res.status(500).json({ 
@@ -361,13 +394,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Record payment
   app.post("/api/payments", async (req, res) => {
     try {
       const paymentData = insertPaymentSchema.parse(req.body);
       const payment = await storage.createPayment(paymentData);
-      
+
       // Send payment receipt if patient has email
       try {
         if (payment.patientId) {
@@ -379,7 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (emailError) {
         console.error("Failed to send payment receipt:", emailError);
       }
-      
+
       res.status(201).json(payment);
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -391,30 +424,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Handle Stripe payment success/confirmation
   app.post("/api/record-payment", async (req, res) => {
     if (!stripe) {
       return res.status(500).json({ message: "Stripe is not configured" });
     }
-    
+
     try {
       const { paymentIntentId, status } = req.body;
-      
+
       if (!paymentIntentId) {
         return res.status(400).json({ message: "Missing payment intent ID" });
       }
-      
+
       // Retrieve the payment intent from Stripe to verify
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      
+
       if (!paymentIntent || !paymentIntent.metadata.appointmentId || !paymentIntent.metadata.patientId) {
         return res.status(400).json({ message: "Invalid payment intent or missing metadata" });
       }
-      
+
       const appointmentId = parseInt(paymentIntent.metadata.appointmentId);
       const patientId = parseInt(paymentIntent.metadata.patientId);
-      
+
       // Create a payment record in our system
       const payment = await storage.createPayment({
         appointmentId,
@@ -425,7 +458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transactionId: paymentIntentId,
         stripePaymentIntentId: paymentIntentId
       });
-      
+
       // Log the activity
       await storage.createActivity({
         type: "payment_received",
@@ -433,16 +466,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId: appointmentId,
         entityType: "appointment"
       });
-      
+
       // If we have a patient email, send a receipt and generate PDF
       try {
         const patient = await storage.getPatient(patientId);
         const appointment = await storage.getAppointment(appointmentId);
-        
+
         if (patient && patient.email) {
           await sendPaymentReceipt(patient.email, patient.name, payment);
         }
-        
+
         // Generate PDF invoice in background
         if (appointment && patient && appointment.serviceId) {
           const service = await storage.getService(appointment.serviceId);
@@ -461,7 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (emailError) {
         console.error("Failed to send payment receipt or generate PDF:", emailError);
       }
-      
+
       res.status(200).json({ success: true, payment });
     } catch (error: any) {
       console.error("Error recording payment:", error);
@@ -482,42 +515,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Generate appointment confirmation PDF
   app.get("/api/appointments/:id/pdf", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const appointment = await storage.getAppointment(id);
-      
+
       if (!appointment) {
         return res.status(404).json({ message: "Appointment not found" });
       }
-      
+
       const patient = appointment.patientId 
         ? await storage.getPatient(appointment.patientId) 
         : null;
-        
+
       if (!patient) {
         return res.status(404).json({ message: "Patient not found" });
       }
-      
+
       const service = appointment.serviceId 
         ? await storage.getService(appointment.serviceId)
         : null;
-        
+
       if (!service) {
         return res.status(404).json({ message: "Service not found" });
       }
-      
+
       const pdfPath = await generateAppointmentPDF(appointment, patient, service);
-      
+
       // Set headers for file download
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=appointment_${id}.pdf`);
-      
+
       // Send the file
       fs.createReadStream(pdfPath).pipe(res);
-      
+
       // Delete the file after sending
       res.on('finish', () => {
         fs.unlink(pdfPath, (err) => {
@@ -529,58 +562,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Generate invoice PDF
   app.get("/api/payments/:id/pdf", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const payment = await storage.getPayment(id);
-      
+
       if (!payment) {
         return res.status(404).json({ message: "Payment not found" });
       }
-      
+
       // If we already have a PDF path and it exists, send that file
       if (payment.invoicePdfPath && fs.existsSync(payment.invoicePdfPath)) {
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=invoice_${id}.pdf`);
         return fs.createReadStream(payment.invoicePdfPath).pipe(res);
       }
-      
+
       // Otherwise, generate a new PDF
       const patient = payment.patientId 
         ? await storage.getPatient(payment.patientId)
         : null;
-        
+
       if (!patient) {
         return res.status(404).json({ message: "Patient not found" });
       }
-      
+
       const appointment = payment.appointmentId
         ? await storage.getAppointment(payment.appointmentId)
         : null;
-        
+
       if (!appointment) {
         return res.status(404).json({ message: "Appointment not found" });
       }
-      
+
       const service = appointment.serviceId
         ? await storage.getService(appointment.serviceId)
         : null;
-        
+
       if (!service) {
         return res.status(404).json({ message: "Service not found" });
       }
-      
+
       const pdfPath = await generateInvoicePDF(payment, patient, appointment, service);
-      
+
       // Update payment with PDF path
       await storage.updatePayment(payment.id, { invoicePdfPath: pdfPath });
-      
+
       // Set headers for file download
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=invoice_${id}.pdf`);
-      
+
       // Send the file
       fs.createReadStream(pdfPath).pipe(res);
     } catch (error: any) {
@@ -595,7 +628,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Combine services (as service type) and products (if we had them)
       const services = await storage.getServices();
-      
+
       // Format services as POS products
       const serviceProducts = services.map(service => ({
         id: service.id,
@@ -605,7 +638,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: service.description,
         duration: service.duration
       }));
-      
+
       // Sample retail products (in a real app, these would come from a 'products' table)
       const retailProducts = [
         { id: 1001, name: "Coconut Oil", price: 22, category: "product", description: "Organic coconut oil for skin and hair" },
@@ -614,20 +647,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { id: 1004, name: "Healing Balm", price: 26, category: "product", description: "All-purpose healing balm with herbs" },
         { id: 1005, name: "Tea Tree Oil", price: 19, category: "product", description: "Pure tea tree oil for skin treatments" },
       ];
-      
+
       const allProducts = [...serviceProducts, ...retailProducts];
-      
+
       res.json(allProducts);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Get all customers for POS
   app.get("/api/pos/customers", async (req, res) => {
     try {
       const patients = await storage.getPatients();
-      
+
       // Format patients as customers for POS
       const customers = patients.map(patient => ({
         id: patient.id,
@@ -636,28 +669,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phone: patient.phone || "",
         avatar: null
       }));
-      
+
       res.json(customers);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
   });
-  
+
   // Create POS payment intent
   app.post("/api/pos/create-payment-intent", async (req, res) => {
     try {
       const { amount, items, customerId, metadata = {} } = req.body;
-      
+
       if (!amount) {
         return res.status(400).json({ message: "Amount is required" });
       }
-      
+
       // Add additional metadata
       const paymentMetadata: Record<string, string> = {
         ...metadata,
         paymentType: "pos_transaction",
       };
-      
+
       if (customerId) {
         const patient = await storage.getPatient(customerId);
         if (patient) {
@@ -665,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paymentMetadata.customerName = patient.name;
         }
       }
-      
+
       // Items information (serialized)
       if (items && Array.isArray(items)) {
         paymentMetadata.itemsCount = items.length.toString();
@@ -676,14 +709,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           quantity: item.quantity
         })));
       }
-      
+
       // Create payment intent using our service
       const paymentIntent = await stripeService.createPaymentIntent(
         amount,
         "usd",
         paymentMetadata
       );
-      
+
       // Log the activity
       await storage.createActivity({
         type: "pos_payment_intent_created",
@@ -691,7 +724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId: customerId || 0,
         entityType: customerId ? "patient" : "pos"
       });
-      
+
       res.json({ 
         clientSecret: paymentIntent.client_secret,
         paymentIntentId: paymentIntent.id
@@ -704,7 +737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Record POS payment
   app.post("/api/pos/record-payment", async (req, res) => {
     try {
@@ -716,7 +749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentMethod, 
         status = "completed"
       } = req.body;
-      
+
       // Validate the payment with Stripe if paymentIntentId provided
       if (paymentIntentId) {
         const paymentIntent = await stripeService.retrievePaymentIntent(paymentIntentId);
@@ -724,7 +757,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.warn(`Payment intent ${paymentIntentId} has status ${paymentIntent.status}, not 'succeeded'`);
         }
       }
-      
+
       // Format for storage
       const paymentData: any = {
         amount: amount.toString(),
@@ -733,21 +766,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transactionId: paymentIntentId || `pos_${Date.now()}`,
         receiptSent: false
       };
-      
+
       // Add patient reference if customer exists
       if (customerId) {
         paymentData.patientId = customerId;
       }
-      
+
       // Store payment record
       const payment = await storage.createPayment(paymentData);
-      
+
       // Store items as separate records (if we had a line_items table)
       // For now, we'll use the activity log to record this information
       const itemsList = items?.map((item: any) => 
         `${item.quantity}x ${item.name} ($${item.price.toFixed(2)} each)`
       ).join(", ") || "No items";
-      
+
       // Log the activity
       await storage.createActivity({
         type: "pos_payment_recorded",
@@ -755,7 +788,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId: payment.id,
         entityType: "payment"
       });
-      
+
       // Send receipt if email available and customerId provided
       if (customerId) {
         try {
@@ -763,7 +796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (patient && patient.email) {
             // In a real implementation, we would create a POS-specific receipt
             await sendPaymentReceipt(patient.email, patient.name, payment);
-            
+
             // Update payment to indicate receipt was sent
             await storage.updatePayment(payment.id, { status: "completed_receipt_sent" });
           }
@@ -771,7 +804,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Failed to send POS payment receipt:", emailError);
         }
       }
-      
+
       res.status(201).json({ success: true, payment });
     } catch (error: any) {
       console.error("Error recording POS payment:", error);

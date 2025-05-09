@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,10 @@ import {
   ContextMenuItem, 
   ContextMenuTrigger 
 } from "@/components/ui/context-menu";
-import { PlusCircle, Pencil, XCircle, Check, CalendarClock, DollarSign } from "lucide-react";
+import { PlusCircle, Pencil, XCircle, Check, CalendarClock, DollarSign, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { IntakeFormModal } from "./intake-form-modal";
 
 // Extended appointment type for UI display with derived fields
 interface ExtendedAppointment extends Appointment {
@@ -31,8 +33,11 @@ interface RoomAppointmentsProps {
 
 export function RoomAppointments({ roomId, onNewAppointment, onEditAppointment }: RoomAppointmentsProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isIntakeFormModalOpen, setIsIntakeFormModalOpen] = useState(false);
+  const [checkedInAppointmentId, setCheckedInAppointmentId] = useState<number | null>(null);
   const { toast } = useToast();
-  
+  const queryClient = useQueryClient();
+
   const { data: appointments = [], isLoading, error, refetch } = useQuery<ExtendedAppointment[]>({
     queryKey: ['/api/appointments', { roomId, date: format(selectedDate, 'yyyy-MM-dd') }],
     enabled: !!roomId,
@@ -45,10 +50,38 @@ export function RoomAppointments({ roomId, onNewAppointment, onEditAppointment }
     }
   }, [roomId, refetch]);
 
-  const handleCheckIn = (appointment: ExtendedAppointment) => {
-    toast({
-      title: "Patient checked in",
-      description: `${appointment.patientName || 'Patient'} has been checked in.`
+  const checkInMutation = useMutation({
+    mutationFn: async (appointmentId: number) => {
+      // Replace with your actual check-in API call
+      const response = await fetch(`/api/appointments/${appointmentId}/checkin`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        throw new Error('Check-in failed');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate the appointments query to refetch data
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error checking in patient",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle check-in
+  const handleCheckIn = (appointment: Appointment) => {
+    checkInMutation.mutate(appointment.id, {
+      onSuccess: () => {
+        // After successful check-in, show intake form prompt
+        setCheckedInAppointmentId(appointment.id);
+        setIsIntakeFormModalOpen(true);
+      }
     });
   };
 
@@ -183,28 +216,28 @@ export function RoomAppointments({ roomId, onNewAppointment, onEditAppointment }
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit Appointment
                         </ContextMenuItem>
-                        
-                        {appointment.status !== 'checked-in' && appointment.status !== 'canceled' && (
+
+                        {appointment.status === 'scheduled' && (
                           <ContextMenuItem onClick={() => handleCheckIn(appointment)}>
-                            <Check className="mr-2 h-4 w-4" />
+                            <LogIn className="mr-2 h-4 w-4" />
                             Check In
                           </ContextMenuItem>
                         )}
-                        
+
                         {appointment.status === 'checked-in' && (
                           <ContextMenuItem onClick={() => handleCheckout(appointment)}>
                             <Check className="mr-2 h-4 w-4" />
                             Check Out
                           </ContextMenuItem>
                         )}
-                        
+
                         {appointment.status !== 'canceled' && (
                           <ContextMenuItem onClick={() => handleCancel(appointment)}>
                             <XCircle className="mr-2 h-4 w-4" />
                             Cancel Appointment
                           </ContextMenuItem>
                         )}
-                        
+
                         {appointment.paymentStatus !== 'paid' && appointment.status !== 'canceled' && (
                           <ContextMenuItem onClick={() => handlePayment(appointment)}>
                             <DollarSign className="mr-2 h-4 w-4" />
@@ -219,6 +252,14 @@ export function RoomAppointments({ roomId, onNewAppointment, onEditAppointment }
           )}
         </CardContent>
       </Card>
+       <IntakeFormModal
+        isOpen={isIntakeFormModalOpen}
+        onClose={() => {
+          setIsIntakeFormModalOpen(false);
+          setCheckedInAppointmentId(null);
+        }}
+        appointmentId={checkedInAppointmentId}
+      />
     </div>
   );
 }
