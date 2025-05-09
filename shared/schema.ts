@@ -130,8 +130,7 @@ export const payments = pgTable("payments", {
   invoicePdfPath: text("invoice_pdf_path"),
 });
 
-export const insertPaymentSchema = createInsertSchema(payments)
-  .pick({
+export const insertPaymentSchema = createInsertSchema(payments).pick({
     appointmentId: true,
     patientId: true,
     amount: true,
@@ -140,6 +139,10 @@ export const insertPaymentSchema = createInsertSchema(payments)
     transactionId: true,
     stripePaymentIntentId: true,
     invoicePdfPath: true,
+  })
+  .extend({
+    // Allow number for amount (will be converted to string)
+    amount: z.union([z.string(), z.number().transform(n => n.toString())])
   });
 
 // Treatment Plan schema
@@ -352,20 +355,6 @@ export type InsertLoyaltyTransaction = z.infer<typeof insertLoyaltyTransactionSc
 export type LoyaltyTransaction = typeof loyaltyTransactions.$inferSelect;
 export type InsertLoyaltySubscription = z.infer<typeof insertLoyaltySubscriptionSchema>;
 export type LoyaltySubscription = typeof loyaltySubscriptions.$inferSelect;
-
-    appointmentId: true,
-    patientId: true,
-    amount: true,
-    paymentMethod: true,
-    status: true,
-    transactionId: true,
-    stripePaymentIntentId: true,
-    invoicePdfPath: true,
-  })
-  .extend({
-    // Allow number for amount (will be converted to string)
-    amount: z.union([z.string(), z.number().transform(n => n.toString())])
-  });
 
 // Activity schema for tracking actions in the system
 export const activities = pgTable("activities", {
