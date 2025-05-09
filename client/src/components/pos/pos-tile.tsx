@@ -85,16 +85,28 @@ export const PosTile = () => {
     error: customersError
   } = useQuery<Customer[]>({ 
     queryKey: ['/api/pos/customers'],
+    queryFn: async () => {
+      const res = await fetch('/api/pos/customers');
+      if (!res.ok) throw new Error('Failed to load customers');
+      return res.json();
+    }
+  });
 
-  function validateGiftCard() {
+  const validateGiftCard = () => {
     if (!giftCardCode) return;
     
     setIsValidatingGiftCard(true);
     setGiftCardError("");
     
     fetch(`/api/gift-cards/validate/${giftCardCode}`)
-      .then(response => response.json())
-      .then(data => {
+      .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          return response.json().then(data => ({response, data}));
+        }
+        return {response, data: {}};
+      })
+      .then(({response, data}) => {
         if (!response.ok) {
           setGiftCardError(data.message || "Invalid gift card code");
           setGiftCardInfo(null);
@@ -109,7 +121,7 @@ export const PosTile = () => {
       .finally(() => {
         setIsValidatingGiftCard(false);
       });
-  }
+  };
   
   const applyGiftCard = () => {
     if (!giftCardInfo || !giftCardAmount) return;
