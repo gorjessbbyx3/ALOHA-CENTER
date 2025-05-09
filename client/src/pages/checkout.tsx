@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from 'wouter';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
 // recreating the `Stripe` object on every render.
@@ -157,12 +157,25 @@ export default function Checkout() {
     );
   }
 
-  if (isLoading || !clientSecret) {
+  if (isLoading) {
     return (
       <div className="h-[70vh] flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
           <p className="text-muted-foreground">Setting up payment...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!clientSecret) {
+    return (
+      <div className="h-[70vh] flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-8 w-8 mx-auto mb-4 text-red-500" />
+          <h2 className="text-xl font-semibold mb-2">Payment Setup Error</h2>
+          <p className="text-muted-foreground mb-4">There was a problem setting up the payment.</p>
+          <Button onClick={() => window.history.back()}>Go Back</Button>
         </div>
       </div>
     );

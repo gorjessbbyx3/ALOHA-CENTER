@@ -427,11 +427,16 @@ export const PosTile = () => {
             disabled={isLoading}
           >
             {isLoading ? (
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Processing...
+              </>
             ) : (
-              <Check className="mr-2 h-5 w-5" />
+              <>
+                <Check className="mr-2 h-5 w-5" />
+                Complete Sale
+              </>
             )}
-            {isLoading ? "Processing..." : "Complete Sale"}
           </Button>
         );
 
@@ -445,11 +450,16 @@ export const PosTile = () => {
             disabled={isLoading}
           >
             {isLoading ? (
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Recording payment...
+              </>
             ) : (
-              <Check className="mr-2 h-5 w-5" />
+              <>
+                <Check className="mr-2 h-5 w-5" />
+                Done
+              </>
             )}
-            {isLoading ? "Recording payment..." : "Done"}
           </Button>
         );
     }

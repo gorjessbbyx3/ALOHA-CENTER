@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -13,6 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface IntakeFormModalProps {
@@ -25,14 +25,14 @@ interface IntakeFormModalProps {
 export function IntakeFormModal({ appointmentId, open, onOpenChange, onComplete }: IntakeFormModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // Get appointment details
   const { data: appointment } = useQuery({
     queryKey: [`/api/appointments/${appointmentId}`],
     enabled: !!appointmentId && open,
     select: (data: Appointment) => data,
   });
-  
+
   // Mark intake form as completed
   const completeIntakeForm = useMutation({
     mutationFn: async () => {
@@ -60,7 +60,7 @@ export function IntakeFormModal({ appointmentId, open, onOpenChange, onComplete 
       });
     },
   });
-  
+
   // Mark intake form as skipped
   const skipIntakeForm = useMutation({
     mutationFn: async () => {
@@ -88,14 +88,14 @@ export function IntakeFormModal({ appointmentId, open, onOpenChange, onComplete 
       });
     },
   });
-  
+
   const openIntakeForm = () => {
     // In a real implementation, you would likely redirect to the intake form
     // or open it in a new tab/window
     window.open(`/intake-form/${appointmentId}`, '_blank');
     completeIntakeForm.mutate();
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -105,17 +105,17 @@ export function IntakeFormModal({ appointmentId, open, onOpenChange, onComplete 
             Would you like the patient to complete the intake form now or skip for later?
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="flex flex-col space-y-4 py-4">
           <p>
             Patient: <span className="font-medium">{appointment?.patientName || "Unknown"}</span>
           </p>
-          
+
           <p className="text-sm text-muted-foreground">
             The intake form collects important health information, treatment consent, and payment details.
           </p>
         </div>
-        
+
         <DialogFooter className="flex sm:justify-between">
           <Button 
             variant="outline" 
@@ -124,7 +124,7 @@ export function IntakeFormModal({ appointmentId, open, onOpenChange, onComplete 
           >
             {skipIntakeForm.isPending ? "Processing..." : "Skip for Later"}
           </Button>
-          
+
           <Button 
             variant="default"
             onClick={openIntakeForm}

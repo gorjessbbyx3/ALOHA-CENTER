@@ -133,12 +133,22 @@ export function CheckoutForm({
           <PaymentElement />
         </CardContent>
         <CardFooter className="flex justify-end">
+          {!stripe || !elements ? (
+            <div className="text-amber-600 mb-2 text-sm">
+              <span>Loading payment system...</span>
+            </div>
+          ) : null}
           <Button 
             type="submit" 
             disabled={isProcessing || !stripe || !elements}
-            className="mt-4"
+            className="mt-4 min-w-[150px]"
           >
-            {isProcessing ? "Processing..." : `Pay $${Number(paymentAmount).toFixed(2)}`}
+            {isProcessing ? 
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </> : 
+              `Pay $${Number(paymentAmount).toFixed(2)}`}
           </Button>
         </CardFooter>
       </Card>

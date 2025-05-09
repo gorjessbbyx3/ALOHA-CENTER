@@ -79,6 +79,17 @@
     setTimeout(() => {
       window.location.href = '/';
     }, 10000);
+    
+    // Fix the button click event
+    document.addEventListener('DOMContentLoaded', () => {
+      const homeButton = document.getElementById('home-button');
+      if (homeButton) {
+        homeButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.location.href = '/';
+        });
+      }
+    });
   </script>
 </head>
 <body>
