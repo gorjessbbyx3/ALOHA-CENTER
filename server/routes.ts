@@ -89,8 +89,8 @@ async function seedInitialData() {
       email: text("email").notNull(),
       name: text("name"),
       role: text("role").default("user"),
-      createdAt: timestamp("created_at").defaultNow(),
-      updatedAt: timestamp("updated_at").defaultNow(),
+      created_at: timestamp("created_at").defaultNow(),
+      updated_at: timestamp("updated_at").defaultNow(),
     });
 
     const existingUsers = await db.select().from(users);

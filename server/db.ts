@@ -116,7 +116,9 @@ async function createSchemaIfNeeded() {
           password TEXT NOT NULL,
           email TEXT NOT NULL,
           name TEXT NOT NULL,
-          role TEXT NOT NULL DEFAULT 'patient'
+          role TEXT NOT NULL DEFAULT 'patient',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
       
