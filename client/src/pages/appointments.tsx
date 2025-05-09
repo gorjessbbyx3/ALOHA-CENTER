@@ -49,7 +49,7 @@ export default function Appointments() {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => window.open('https://calendly.com/your-account-here', '_blank')}
+          onClick={() => window.open('https://calendly.com/aloha-healing-center', '_blank')}
         >
           <ExternalLink size={16} className="mr-2" />
           Open Calendly Dashboard

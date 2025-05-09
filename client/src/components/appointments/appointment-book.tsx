@@ -466,7 +466,7 @@ export function AppointmentBook() {
           <div className="relative h-full w-full mt-4">
             <iframe
               ref={calendlyRef}
-              src="https://calendly.com/your-account-here/30min"
+              src="https://calendly.com/aloha-healing-center/light-therapy"
               width="100%"
               height="100%"
               frameBorder="0"

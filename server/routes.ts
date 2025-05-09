@@ -11,6 +11,7 @@ import { generateAppointmentPDF, generateInvoicePDF } from "./pdf-generator";
 import fs from "fs";
 import path from "path";
 import * as stripeService from "./stripe";
+import calendlyService from "./calendly";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('Missing STRIPE_SECRET_KEY environment variable. Payment processing will not work correctly.');
@@ -619,6 +620,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error generating invoice PDF:", error);
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Calendly Integration Routes
+  app.get("/api/calendly/events", async (req, res) => {
+    try {
+      const startTime = req.query.startTime as string;
+      const endTime = req.query.endTime as string;
+      
+      const events = await calendlyService.getScheduledEvents(startTime, endTime);
+      res.json(events);
+    } catch (error: any) {
+      console.error("Error fetching Calendly events:", error);
+      res.status(500).json({ 
+        message: "Error fetching Calendly events", 
+        error: error.message 
+      });
+    }
+  });
+
+  app.get("/api/calendly/event-types", async (req, res) => {
+    try {
+      const eventTypes = await calendlyService.getEventTypes();
+      res.json(eventTypes);
+    } catch (error: any) {
+      console.error("Error fetching Calendly event types:", error);
+      res.status(500).json({ 
+        message: "Error fetching Calendly event types", 
+        error: error.message 
+      });
+    }
+  });
+
+  app.post("/api/calendly/sync", async (req, res) => {
+    try {
+      const events = await calendlyService.syncCalendlyEvents();
+      
+      // Log the activity
+      await storage.createActivity({
+        type: "calendly_sync",
+        description: `Synced ${events.collection.length} Calendly events`,
+        entityId: 0,
+        entityType: "system"
+      });
+      
+      res.json({ 
+        success: true, 
+        message: `Successfully synced ${events.collection.length} events` 
+      });
+    } catch (error: any) {
+      console.error("Error syncing Calendly events:", error);
+      res.status(500).json({ 
+        message: "Error syncing Calendly events", 
+        error: error.message 
+      });
+    }
+  });
+
+  // Webhooks endpoint for Calendly
+  app.post("/api/webhooks/calendly", async (req, res) => {
+    try {
+      const event = req.body;
+      console.log("Received Calendly webhook:", event);
+      
+      // Process the webhook based on the event type
+      if (event.event === 'invitee.created') {
+        // New appointment created in Calendly
+        const invitee = event.payload.invitee;
+        const eventDetails = event.payload.event;
+        
+        // Create appointment in your system
+        // Map Calendly event to your appointment schema
+        const appointmentData = {
+          date: new Date(eventDetails.start_time),
+          time: new Date(eventDetails.start_time).toLocaleTimeString(),
+          duration: (new Date(eventDetails.end_time).getTime() - new Date(eventDetails.start_time).getTime()) / 60000,
+          status: "scheduled",
+          notes: `Booked via Calendly: ${eventDetails.name}`,
+          serviceId: 1, // Default service ID, you would map this based on event type
+          intakeFormStatus: "pending"
+          // Map other fields as needed
+        };
+        
+        // Log the Calendly appointment creation
+        await storage.createActivity({
+          type: "calendly_appointment_created",
+          description: `Appointment created via Calendly: ${eventDetails.name} for ${invitee.name}`,
+          entityId: 0,
+          entityType: "appointment"
+        });
+        
+        res.status(200).json({ success: true });
+      } else if (event.event === 'invitee.canceled') {
+        // Appointment canceled in Calendly
+        // Handle cancellation in your system
+        res.status(200).json({ success: true });
+      } else {
+        // Other event types
+        res.status(200).json({ success: true });
+      }
+    } catch (error: any) {
+      console.error("Error processing Calendly webhook:", error);
+      res.status(500).json({ 
+        message: "Error processing Calendly webhook", 
+        error: error.message 
+      });
     }
   });
 

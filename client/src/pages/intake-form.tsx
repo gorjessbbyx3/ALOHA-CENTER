@@ -1,442 +1,526 @@
 
-import { useState, useEffect } from "react";
-import { useRoute } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { Appointment, Patient } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
 
 export default function IntakeForm() {
-  const [, params] = useRoute("/intake-form/:id");
-  const appointmentId = params?.id ? parseInt(params.id) : null;
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isViewMode, setIsViewMode] = useState(false);
-  const [activeTab, setActiveTab] = useState("personal");
+  const { appointmentId } = useParams();
+  const navigate = useNavigate();
+  
+  // Form state
   const [formData, setFormData] = useState({
-    // Personal information
-    name: "",
-    dob: "",
-    phone: "",
-    email: "",
-    address: "",
+    // Section 1: Basic Information
+    fullName: "",
+    dateOfBirth: "",
+    phoneNumber: "",
+    emailAddress: "",
     emergencyContact: "",
-    emergencyPhone: "",
     
-    // Medical information
-    medicalConditions: "",
-    medications: "",
-    allergies: "",
+    // Section 2: General Health History
+    underPhysicianCare: false,
+    chronicConditions: "",
+    isPregnant: "no",
+    hasMedicalDevices: false,
+    hasSeizures: false,
+    takingMedications: false,
+    medicationsList: "",
     
-    // Consent
-    consentTreatment: false,
-    consentPrivacy: false,
-    consentPhoto: false,
+    // Section 3: Wellness Goals
+    reasonForVisit: "",
+    priorExperience: false,
+    concerns: "",
+    hearAboutUs: "",
     
-    // Payment
-    paymentMethod: "card",
+    // Section 4: Pets
+    hasPet: false,
+    petName: "",
+    petSpecies: "",
+    petAge: "",
+    petUnderVetCare: "no",
+    petHasSeizures: "no",
+    petWellnessGoals: "",
+    
+    // Section 5: Consent and Agreement
+    notMedicalCare: false,
+    consentToServices: false,
+    releaseFromLiability: false,
+    permissionForTestimonial: false
   });
   
-  // Check if we're in view mode
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    setIsViewMode(urlParams.get("view") === "true");
-  }, []);
-  
-  // Get appointment details
-  const { data: appointment, isLoading: appointmentLoading } = useQuery({
-    queryKey: [`/api/appointments/${appointmentId}`],
-    enabled: !!appointmentId,
-    select: (data: Appointment) => data,
-  });
-  
-  // Get patient details
-  const { data: patient, isLoading: patientLoading } = useQuery({
-    queryKey: appointment ? [`/api/patients/${appointment.patientId}`] : [],
-    enabled: !!appointment?.patientId,
-    select: (data: Patient) => data,
-  });
-  
-  // Pre-fill form with patient data
-  useEffect(() => {
-    if (patient) {
-      setFormData(prev => ({
-        ...prev,
-        name: patient.name || "",
-        dob: patient.dateOfBirth || "",
-        phone: patient.phone || "",
-        email: patient.email || "",
-        address: patient.address || "",
-      }));
-    }
-  }, [patient]);
-  
-  // Submit form mutation
-  const submitForm = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", `/api/appointments/${appointmentId}/intake-form`, {
-        status: "completed",
-        timestamp: new Date().toISOString(),
-        formData
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/appointments/${appointmentId}`] });
-      toast({
-        title: "Form Submitted",
-        description: "Your intake form has been successfully submitted.",
-      });
-      // In a real implementation, you might redirect or close the window
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "There was a problem submitting your form. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-  
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    submitForm.mutate();
-  };
-  
-  // Handle input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // Handle form input changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
   // Handle checkbox changes
-  const handleCheckboxChange = (name: string, checked: boolean) => {
-    setFormData(prev => ({ ...prev, [name]: checked }));
+  const handleCheckboxChange = (field: string, checked: boolean) => {
+    setFormData(prev => ({ ...prev, [field]: checked }));
   };
   
-  // Loading state
-  if (appointmentLoading || patientLoading) {
-    return (
-      <div className="container max-w-4xl mx-auto py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-        </div>
-      </div>
-    );
-  }
+  // Handle select/radio changes
+  const handleSelectChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+  
+  // Submit form mutation
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      const response = await axios.post(`/api/appointments/${appointmentId}/intake-form`, {
+        formData,
+        status: "completed",
+        timestamp: new Date().toISOString()
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Intake Form Submitted",
+        description: "Thank you for completing the intake form.",
+      });
+      navigate(`/appointments`);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Submission Failed",
+        description: error.response?.data?.message || "Failed to submit the intake form",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitMutation.mutate();
+  };
   
   return (
-    <div className="container max-w-4xl mx-auto py-8">
+    <div className="container max-w-4xl mx-auto py-8 px-4">
       <Card>
-        <CardHeader className="bg-primary text-white">
-          <CardTitle className="text-2xl">Patient Intake Form</CardTitle>
-          <CardDescription className="text-white opacity-90">
-            {isViewMode 
-              ? "Review the patient's intake form information" 
-              : "Please complete all sections of this form"}
+        <CardHeader className="bg-gradient-to-r from-teal-500 to-blue-500 text-white">
+          <CardTitle className="text-2xl">Aloha Light Center - Client Intake Form</CardTitle>
+          <CardDescription className="text-white/80">
+            Please complete this form for your light therapy session
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmit}>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-4 mb-6">
-                <TabsTrigger value="personal">Personal Info</TabsTrigger>
-                <TabsTrigger value="medical">Medical History</TabsTrigger>
-                <TabsTrigger value="consent">Consent Forms</TabsTrigger>
-                <TabsTrigger value="payment">Payment</TabsTrigger>
-              </TabsList>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-8 pt-6">
+            {/* Section 1: Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Section 1: Basic Information</h3>
               
-              {/* Personal Information Tab */}
-              <TabsContent value="personal" className="space-y-4">
-                <h3 className="text-lg font-medium">Personal Information</h3>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input 
-                      id="name" 
-                      name="name" 
-                      value={formData.name} 
-                      onChange={handleInputChange}
-                      readOnly={isViewMode}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="dob">Date of Birth</Label>
-                    <Input 
-                      id="dob" 
-                      name="dob" 
-                      type="date" 
-                      value={formData.dob}
-                      onChange={handleInputChange}
-                      readOnly={isViewMode}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input 
-                      id="phone" 
-                      name="phone" 
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      readOnly={isViewMode}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input 
-                      id="email" 
-                      name="email"
-                      type="email" 
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      readOnly={isViewMode}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2 col-span-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Textarea 
-                      id="address" 
-                      name="address" 
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      readOnly={isViewMode}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="emergencyContact">Emergency Contact Name</Label>
-                    <Input 
-                      id="emergencyContact" 
-                      name="emergencyContact" 
-                      value={formData.emergencyContact}
-                      onChange={handleInputChange}
-                      readOnly={isViewMode}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="emergencyPhone">Emergency Contact Phone</Label>
-                    <Input 
-                      id="emergencyPhone" 
-                      name="emergencyPhone" 
-                      value={formData.emergencyPhone}
-                      onChange={handleInputChange}
-                      readOnly={isViewMode}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="fullName" 
+                    name="fullName" 
+                    value={formData.fullName} 
+                    onChange={handleChange} 
+                    required
+                  />
                 </div>
                 
-                {!isViewMode && (
-                  <div className="flex justify-end mt-4">
-                    <Button type="button" onClick={() => setActiveTab("medical")}>
-                      Next: Medical History
-                    </Button>
-                  </div>
-                )}
-              </TabsContent>
-              
-              {/* Medical History Tab */}
-              <TabsContent value="medical" className="space-y-4">
-                <h3 className="text-lg font-medium">Medical History</h3>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="medicalConditions">
-                      Do you have any medical conditions we should be aware of?
-                    </Label>
-                    <Textarea 
-                      id="medicalConditions" 
-                      name="medicalConditions" 
-                      value={formData.medicalConditions}
-                      onChange={handleInputChange}
-                      readOnly={isViewMode}
-                      placeholder="List any medical conditions, injuries, or diagnoses"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="medications">
-                      Are you currently taking any medications?
-                    </Label>
-                    <Textarea 
-                      id="medications" 
-                      name="medications" 
-                      value={formData.medications}
-                      onChange={handleInputChange}
-                      readOnly={isViewMode}
-                      placeholder="List all current medications and supplements"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="allergies">
-                      Do you have any allergies?
-                    </Label>
-                    <Textarea 
-                      id="allergies" 
-                      name="allergies" 
-                      value={formData.allergies}
-                      onChange={handleInputChange}
-                      readOnly={isViewMode}
-                      placeholder="List any allergies to medications, foods, or materials"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dateOfBirth">Date of Birth <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="dateOfBirth" 
+                    name="dateOfBirth" 
+                    type="date" 
+                    value={formData.dateOfBirth} 
+                    onChange={handleChange} 
+                    required
+                  />
                 </div>
                 
-                {!isViewMode && (
-                  <div className="flex justify-between mt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      onClick={() => setActiveTab("personal")}
-                    >
-                      Back
-                    </Button>
-                    <Button type="button" onClick={() => setActiveTab("consent")}>
-                      Next: Consent Forms
-                    </Button>
-                  </div>
-                )}
-              </TabsContent>
-              
-              {/* Consent Forms Tab */}
-              <TabsContent value="consent" className="space-y-4">
-                <h3 className="text-lg font-medium">Consent Forms</h3>
-                
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-2">
-                    <Checkbox 
-                      id="consentTreatment" 
-                      checked={formData.consentTreatment}
-                      onCheckedChange={(checked) => 
-                        handleCheckboxChange("consentTreatment", checked as boolean)
-                      }
-                      disabled={isViewMode}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                      <Label htmlFor="consentTreatment">
-                        I consent to receive treatment
-                      </Label>
-                      <p className="text-sm text-gray-500">
-                        I authorize the staff to administer the therapeutic services I have requested.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-2">
-                    <Checkbox 
-                      id="consentPrivacy" 
-                      checked={formData.consentPrivacy}
-                      onCheckedChange={(checked) => 
-                        handleCheckboxChange("consentPrivacy", checked as boolean)
-                      }
-                      disabled={isViewMode}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                      <Label htmlFor="consentPrivacy">
-                        I acknowledge the privacy policy
-                      </Label>
-                      <p className="text-sm text-gray-500">
-                        I have been provided with a copy of the privacy policy and understand how my information will be used.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-2">
-                    <Checkbox 
-                      id="consentPhoto" 
-                      checked={formData.consentPhoto}
-                      onCheckedChange={(checked) => 
-                        handleCheckboxChange("consentPhoto", checked as boolean)
-                      }
-                      disabled={isViewMode}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                      <Label htmlFor="consentPhoto">
-                        I consent to photography (optional)
-                      </Label>
-                      <p className="text-sm text-gray-500">
-                        I authorize the clinic to take and use photographs for clinical documentation and marketing purposes.
-                      </p>
-                    </div>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phoneNumber">Phone Number <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="phoneNumber" 
+                    name="phoneNumber" 
+                    value={formData.phoneNumber} 
+                    onChange={handleChange} 
+                    required
+                  />
                 </div>
                 
-                {!isViewMode && (
-                  <div className="flex justify-between mt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      onClick={() => setActiveTab("medical")}
-                    >
-                      Back
-                    </Button>
-                    <Button type="button" onClick={() => setActiveTab("payment")}>
-                      Next: Payment Information
-                    </Button>
-                  </div>
-                )}
-              </TabsContent>
-              
-              {/* Payment Tab */}
-              <TabsContent value="payment" className="space-y-4">
-                <h3 className="text-lg font-medium">Payment Information</h3>
-                
-                <p className="text-sm text-gray-500 mb-4">
-                  Please select your preferred payment method. Your payment information will be securely stored.
-                </p>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Payment options would be added here */}
-                  <p>Payment processing will be handled at checkout.</p>
+                <div className="space-y-2">
+                  <Label htmlFor="emailAddress">Email Address <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="emailAddress" 
+                    name="emailAddress" 
+                    type="email" 
+                    value={formData.emailAddress} 
+                    onChange={handleChange} 
+                    required
+                  />
                 </div>
                 
-                {!isViewMode && (
-                  <div className="flex justify-between mt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      onClick={() => setActiveTab("consent")}
-                    >
-                      Back
-                    </Button>
-                    <Button type="submit" disabled={submitForm.isPending}>
-                      {submitForm.isPending ? "Submitting..." : "Submit Intake Form"}
-                    </Button>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </form>
-        </CardContent>
-        
-        <CardFooter className="flex justify-between border-t pt-6">
-          {isViewMode ? (
-            <div className="w-full flex justify-end">
-              <Button variant="outline" onClick={() => window.close()}>
-                Close
-              </Button>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="emergencyContact">Emergency Contact Name & Number <span className="text-red-500">*</span></Label>
+                  <Input 
+                    id="emergencyContact" 
+                    name="emergencyContact" 
+                    value={formData.emergencyContact} 
+                    onChange={handleChange} 
+                    required
+                  />
+                </div>
+              </div>
             </div>
-          ) : (
-            <p className="text-sm text-gray-500">
-              Thank you for taking the time to complete this form. All information is kept confidential.
-            </p>
-          )}
-        </CardFooter>
+            
+            <Separator />
+            
+            {/* Section 2: General Health History */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Section 2: General Health History</h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="underPhysicianCare" 
+                    checked={formData.underPhysicianCare} 
+                    onCheckedChange={(checked) => handleCheckboxChange("underPhysicianCare", checked as boolean)} 
+                  />
+                  <Label htmlFor="underPhysicianCare" className="leading-tight">
+                    Are you currently under the care of a physician?
+                  </Label>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="chronicConditions">Do you have any chronic conditions? (e.g., autoimmune, neurological, cardiovascular)</Label>
+                  <Textarea 
+                    id="chronicConditions" 
+                    name="chronicConditions" 
+                    value={formData.chronicConditions} 
+                    onChange={handleChange} 
+                    placeholder="If yes, please specify"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Are you currently pregnant or breastfeeding?</Label>
+                  <RadioGroup 
+                    value={formData.isPregnant} 
+                    onValueChange={(value) => handleSelectChange("isPregnant", value)}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="pregnant-yes" />
+                      <Label htmlFor="pregnant-yes">Yes</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="pregnant-no" />
+                      <Label htmlFor="pregnant-no">No</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="na" id="pregnant-na" />
+                      <Label htmlFor="pregnant-na">Not Applicable</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="hasMedicalDevices" 
+                    checked={formData.hasMedicalDevices} 
+                    onCheckedChange={(checked) => handleCheckboxChange("hasMedicalDevices", checked as boolean)} 
+                  />
+                  <Label htmlFor="hasMedicalDevices" className="leading-tight">
+                    Do you have a pacemaker, implants, or sensitive medical devices?
+                  </Label>
+                </div>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="hasSeizures" 
+                    checked={formData.hasSeizures} 
+                    onCheckedChange={(checked) => handleCheckboxChange("hasSeizures", checked as boolean)} 
+                  />
+                  <Label htmlFor="hasSeizures" className="leading-tight">
+                    Do you experience seizures or epilepsy?
+                  </Label>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-2">
+                    <Checkbox 
+                      id="takingMedications" 
+                      checked={formData.takingMedications} 
+                      onCheckedChange={(checked) => {
+                        handleCheckboxChange("takingMedications", checked as boolean);
+                        if (!checked) setFormData(prev => ({ ...prev, medicationsList: "" }));
+                      }} 
+                    />
+                    <Label htmlFor="takingMedications" className="leading-tight">
+                      Are you currently taking medications?
+                    </Label>
+                  </div>
+                  
+                  {formData.takingMedications && (
+                    <div className="pl-6">
+                      <Textarea 
+                        id="medicationsList" 
+                        name="medicationsList" 
+                        value={formData.medicationsList} 
+                        onChange={handleChange} 
+                        placeholder="Please list your medications (optional)"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            {/* Section 3: Wellness Goals */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Section 3: Wellness Goals</h3>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reasonForVisit">What brings you to Aloha Light Center? <span className="text-red-500">*</span></Label>
+                  <Textarea 
+                    id="reasonForVisit" 
+                    name="reasonForVisit" 
+                    value={formData.reasonForVisit} 
+                    onChange={handleChange} 
+                    required
+                  />
+                </div>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="priorExperience" 
+                    checked={formData.priorExperience} 
+                    onCheckedChange={(checked) => handleCheckboxChange("priorExperience", checked as boolean)} 
+                  />
+                  <Label htmlFor="priorExperience" className="leading-tight">
+                    Have you experienced light, energy, or frequency-based sessions before?
+                  </Label>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="concerns">What physical or emotional concerns are you hoping to support?</Label>
+                  <Textarea 
+                    id="concerns" 
+                    name="concerns" 
+                    value={formData.concerns} 
+                    onChange={handleChange} 
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="hearAboutUs">How did you hear about us?</Label>
+                  <Select 
+                    value={formData.hearAboutUs} 
+                    onValueChange={(value) => handleSelectChange("hearAboutUs", value)}
+                  >
+                    <SelectTrigger id="hearAboutUs">
+                      <SelectValue placeholder="Select an option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="friend">Friend or Family</SelectItem>
+                      <SelectItem value="social">Social Media</SelectItem>
+                      <SelectItem value="search">Internet Search</SelectItem>
+                      <SelectItem value="event">Event</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            {/* Section 4: Pets */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Section 4: Pets (if applicable)</h3>
+              
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="hasPet" 
+                  checked={formData.hasPet} 
+                  onCheckedChange={(checked) => {
+                    handleCheckboxChange("hasPet", checked as boolean);
+                    if (!checked) {
+                      setFormData(prev => ({
+                        ...prev, 
+                        petName: "", 
+                        petSpecies: "", 
+                        petAge: "",
+                        petUnderVetCare: "no",
+                        petHasSeizures: "no",
+                        petWellnessGoals: ""
+                      }));
+                    }
+                  }} 
+                />
+                <Label htmlFor="hasPet" className="leading-tight">
+                  I am bringing a pet to my private light therapy session
+                </Label>
+              </div>
+              
+              {formData.hasPet && (
+                <div className="pl-6 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="petName">Pet's Name</Label>
+                      <Input 
+                        id="petName" 
+                        name="petName" 
+                        value={formData.petName} 
+                        onChange={handleChange} 
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="petSpecies">Species</Label>
+                      <Input 
+                        id="petSpecies" 
+                        name="petSpecies" 
+                        value={formData.petSpecies} 
+                        onChange={handleChange} 
+                        placeholder="Dog, Cat, etc."
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="petAge">Age</Label>
+                      <Input 
+                        id="petAge" 
+                        name="petAge" 
+                        value={formData.petAge} 
+                        onChange={handleChange} 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Is your pet under veterinary care?</Label>
+                    <RadioGroup 
+                      value={formData.petUnderVetCare} 
+                      onValueChange={(value) => handleSelectChange("petUnderVetCare", value)}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="pet-vet-yes" />
+                        <Label htmlFor="pet-vet-yes">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="pet-vet-no" />
+                        <Label htmlFor="pet-vet-no">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Does your pet have a history of seizures or trauma?</Label>
+                    <RadioGroup 
+                      value={formData.petHasSeizures} 
+                      onValueChange={(value) => handleSelectChange("petHasSeizures", value)}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="pet-seizures-yes" />
+                        <Label htmlFor="pet-seizures-yes">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="pet-seizures-no" />
+                        <Label htmlFor="pet-seizures-no">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="petWellnessGoals">What are your goals for your pet's well-being?</Label>
+                    <Textarea 
+                      id="petWellnessGoals" 
+                      name="petWellnessGoals" 
+                      value={formData.petWellnessGoals} 
+                      onChange={handleChange} 
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <Separator />
+            
+            {/* Section 5: Consent and Agreement */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Section 5: Consent and Agreement</h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="notMedicalCare" 
+                    checked={formData.notMedicalCare} 
+                    onCheckedChange={(checked) => handleCheckboxChange("notMedicalCare", checked as boolean)} 
+                    required
+                  />
+                  <Label htmlFor="notMedicalCare" className="leading-tight">
+                    I understand that light sessions are not a replacement for medical care. <span className="text-red-500">*</span>
+                  </Label>
+                </div>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="consentToServices" 
+                    checked={formData.consentToServices} 
+                    onCheckedChange={(checked) => handleCheckboxChange("consentToServices", checked as boolean)} 
+                    required
+                  />
+                  <Label htmlFor="consentToServices" className="leading-tight">
+                    I consent to receive non-invasive, light-based wellness services. <span className="text-red-500">*</span>
+                  </Label>
+                </div>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="releaseFromLiability" 
+                    checked={formData.releaseFromLiability} 
+                    onCheckedChange={(checked) => handleCheckboxChange("releaseFromLiability", checked as boolean)} 
+                    required
+                  />
+                  <Label htmlFor="releaseFromLiability" className="leading-tight">
+                    I release Aloha Light Center and its staff from liability related to my session. <span className="text-red-500">*</span>
+                  </Label>
+                </div>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="permissionForTestimonial" 
+                    checked={formData.permissionForTestimonial} 
+                    onCheckedChange={(checked) => handleCheckboxChange("permissionForTestimonial", checked as boolean)} 
+                  />
+                  <Label htmlFor="permissionForTestimonial" className="leading-tight">
+                    I give permission for Aloha Light Center to use anonymized feedback or testimonial excerpts.
+                  </Label>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+          
+          <CardFooter className="flex flex-col sm:flex-row gap-4 pt-6 pb-8 px-6 border-t bg-muted/20">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => navigate(-1)}>
+              Cancel
+            </Button>
+            <Button type="submit" className="w-full sm:w-auto" disabled={submitMutation.isPending}>
+              {submitMutation.isPending ? "Submitting..." : "Submit Intake Form"}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );
