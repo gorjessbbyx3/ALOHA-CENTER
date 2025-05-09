@@ -1,0 +1,98 @@
+97
+{
+  "Id": "key-consolepolicy-3",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::631289602258:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Allow access for Key Administrators",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-DefaultEC2MgmtRole-us-east-2"
+      },
+      "Action": [
+        "kms:Create*",
+        "kms:Describe*",
+        "kms:Enable*",
+        "kms:List*",
+        "kms:Put*",
+        "kms:Update*",
+        "kms:Revoke*",
+        "kms:Disable*",
+        "kms:Get*",
+        "kms:Delete*",
+        "kms:TagResource",
+        "kms:UntagResource",
+        "kms:ScheduleKeyDeletion",
+        "kms:CancelKeyDeletion",
+        "kms:ReplicateKey",
+        "kms:UpdatePrimaryRegion",
+        "kms:RotateKeyOnDemand"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Allow use of the key",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-DefaultEC2MgmtRole-us-east-2",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-EnableAREX-uzej7",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-EnableDHMC-uzej7",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-EnableExplorer-uzej7",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-LocalAdministrationRole",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-LocalExecutionRole",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-LifecycleManagement-LA-us-east-2",
+          "arn:aws:iam::631289602258:role/AWS-SSM-DiagnosisAdminRole-631289602258-us-east-2",
+          "arn:aws:iam::631289602258:role/AWS-SSM-DiagnosisExecutionRole-631289602258-us-east-2",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-ManageResources-LA-us-east-2"
+        ]
+      },
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Allow attachment of persistent resources",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-DefaultEC2MgmtRole-us-east-2",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-EnableAREX-uzej7",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-EnableDHMC-uzej7",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-EnableExplorer-uzej7",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-LocalAdministrationRole",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-LocalExecutionRole",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-LifecycleManagement-LA-us-east-2",
+          "arn:aws:iam::631289602258:role/AWS-SSM-DiagnosisAdminRole-631289602258-us-east-2",
+          "arn:aws:iam::631289602258:role/AWS-SSM-DiagnosisExecutionRole-631289602258-us-east-2",
+          "arn:aws:iam::631289602258:role/AWS-QuickSetup-SSM-ManageResources-LA-us-east-2"
+        ]
+      },
+      "Action": [
+        "kms:CreateGrant",
+        "kms:ListGrants",
+        "kms:RevokeGrant"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "kms:GrantIsForAWSResource": "true"
+        }
+      }
+    }
+  ]
+}
