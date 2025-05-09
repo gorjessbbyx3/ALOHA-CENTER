@@ -261,3 +261,108 @@ export function LocationForm({
     </Dialog>
   );
 }
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+
+interface LocationFormProps {
+  initialData?: any;
+  onSubmit: (data: any) => void;
+  onCancel: () => void;
+}
+
+export function LocationForm({ initialData, onSubmit, onCancel }: LocationFormProps) {
+  const [formData, setFormData] = useState({
+    name: initialData?.name || "",
+    address: initialData?.address || "",
+    phone: initialData?.phone || "",
+    email: initialData?.email || "",
+    isActive: initialData?.isActive !== false
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Location Name</Label>
+        <Input 
+          id="name" 
+          name="name" 
+          value={formData.name} 
+          onChange={handleChange} 
+          required 
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="address">Address</Label>
+        <Textarea 
+          id="address" 
+          name="address" 
+          value={formData.address} 
+          onChange={handleChange} 
+          required 
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="phone">Phone Number</Label>
+        <Input 
+          id="phone" 
+          name="phone" 
+          value={formData.phone} 
+          onChange={handleChange} 
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input 
+          id="email" 
+          name="email" 
+          type="email" 
+          value={formData.email} 
+          onChange={handleChange} 
+        />
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <Label htmlFor="isActive">Location Status</Label>
+          <p className="text-sm text-muted-foreground">
+            Active locations can be selected for appointments
+          </p>
+        </div>
+        <Switch 
+          id="isActive" 
+          checked={formData.isActive}
+          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+        />
+      </div>
+      
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">
+          {initialData ? "Update Location" : "Add Location"}
+        </Button>
+      </div>
+    </form>
+  );
+}

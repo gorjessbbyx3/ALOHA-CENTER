@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { MapPin, Plus } from "lucide-react";
 import { LocationForm } from "@/components/location/location-form";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +19,42 @@ export default function Settings() {
   const { toast } = useToast();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
+  
+  // Location state management
+  const [isLocationFormOpen, setIsLocationFormOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [isLocationsLoading, setIsLocationsLoading] = useState(false);
+  const [locations, setLocations] = useState([
+    {
+      id: 1,
+      name: "Main Clinic",
+      address: "123 Healing Way, Honolulu, HI 96815",
+      phone: "(808) 555-1234",
+      isActive: true
+    },
+    {
+      id: 2,
+      name: "Waikiki Branch",
+      address: "456 Beach Avenue, Honolulu, HI 96815",
+      phone: "(808) 555-5678",
+      isActive: true
+    }
+  ]);
+
+  const toggleLocationStatus = (location) => {
+    const updatedLocations = locations.map(loc => {
+      if (loc.id === location.id) {
+        return { ...loc, isActive: !loc.isActive };
+      }
+      return loc;
+    });
+    setLocations(updatedLocations);
+    
+    toast({
+      title: location.isActive ? "Location deactivated" : "Location activated",
+      description: `${location.name} has been ${location.isActive ? "deactivated" : "activated"}.`,
+    });
+  };
   
   const handleSaveNotifications = () => {
     toast({
@@ -30,6 +67,13 @@ export default function Settings() {
     toast({
       title: "Clinic information saved",
       description: "Your clinic information has been updated.",
+    });
+  };
+  
+  const handleSavePaymentSettings = () => {
+    toast({
+      title: "Payment settings saved",
+      description: "Your payment settings have been updated.",
     });
   };
   
@@ -47,8 +91,9 @@ export default function Settings() {
       showExportBtn={false}
     >
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="locations">Locations</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
@@ -344,7 +389,7 @@ export default function Settings() {
                 </div>
               </div>
               
-              <Button>Save Payment Settings</Button>
+              <Button onClick={handleSavePaymentSettings}>Save Payment Settings</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -455,5 +500,51 @@ export default function Settings() {
         </TabsContent>
       </Tabs>
     </AdminLayout>
+    
+    {/* Location Form Modal */}
+    {isLocationFormOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div className="w-full max-w-lg bg-white rounded-lg shadow-lg">
+          <div className="p-6">
+            <h2 className="text-xl font-semibold mb-4">
+              {selectedLocation ? "Edit Location" : "Add New Location"}
+            </h2>
+            <LocationForm
+              initialData={selectedLocation}
+              onSubmit={(data) => {
+                if (selectedLocation) {
+                  // Update existing location
+                  setLocations(prevLocations => 
+                    prevLocations.map(loc => 
+                      loc.id === selectedLocation.id ? { ...data, id: selectedLocation.id } : loc
+                    )
+                  );
+                  toast({
+                    title: "Location updated",
+                    description: `${data.name} has been updated successfully.`,
+                  });
+                } else {
+                  // Add new location
+                  setLocations(prevLocations => [
+                    ...prevLocations, 
+                    { ...data, id: Date.now(), isActive: true }
+                  ]);
+                  toast({
+                    title: "Location added",
+                    description: `${data.name} has been added successfully.`,
+                  });
+                }
+                setIsLocationFormOpen(false);
+                setSelectedLocation(null);
+              }}
+              onCancel={() => {
+                setIsLocationFormOpen(false);
+                setSelectedLocation(null);
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    )}
   );
 }
