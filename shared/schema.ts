@@ -132,6 +132,15 @@ export const payments = pgTable("payments", {
 
 export const insertPaymentSchema = createInsertSchema(payments)
   .pick({
+    appointmentId: true,
+    patientId: true,
+    amount: true,
+    paymentMethod: true,
+    status: true,
+    transactionId: true,
+    stripePaymentIntentId: true,
+    invoicePdfPath: true,
+  });
 
 // Treatment Plan schema
 export const treatmentPlans = pgTable("treatment_plans", {

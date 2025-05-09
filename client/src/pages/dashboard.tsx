@@ -137,7 +137,9 @@ export default function Dashboard() {
 }
 
 
-<Dialog>
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
+              <Dialog>
                 <DialogTrigger asChild>
                   <Button className="mt-4">View Enhanced Reports</Button>
                 </DialogTrigger>

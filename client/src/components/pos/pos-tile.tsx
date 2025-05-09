@@ -34,11 +34,12 @@ type Customer = {
   avatar?: string | null;
 };
 
-const [giftCardCode, setGiftCardCode] = useState("");
-const [giftCardAmount, setGiftCardAmount] = useState("");
-const [giftCardInfo, setGiftCardInfo] = useState(null);
-const [giftCardError, setGiftCardError] = useState("");
-const [isValidatingGiftCard, setIsValidatingGiftCard] = useState(false);
+const PosTile = () => {
+  const [giftCardCode, setGiftCardCode] = useState("");
+  const [giftCardAmount, setGiftCardAmount] = useState("");
+  const [giftCardInfo, setGiftCardInfo] = useState(null);
+  const [giftCardError, setGiftCardError] = useState("");
+  const [isValidatingGiftCard, setIsValidatingGiftCard] = useState(false);
 
 type CartItem = {
   id: number;
