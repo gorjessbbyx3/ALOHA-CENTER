@@ -66,12 +66,23 @@ export async function getServices(): Promise<Service[]> {
 
 // Payment related API functions
 export async function createPaymentIntent(amount: number, appointmentId: number, patientId: number): Promise<{clientSecret: string}> {
-  const response = await apiRequest("POST", "/api/create-payment-intent", {
-    amount,
-    appointmentId,
-    patientId
-  });
-  return response.json();
+  try {
+    const response = await apiRequest("POST", "/api/create-payment-intent", {
+      amount,
+      appointmentId,
+      patientId
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to create payment intent");
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error("Payment intent creation failed:", error);
+    throw error;
+  }
 }
 
 export async function recordPayment(paymentData: any): Promise<any> {

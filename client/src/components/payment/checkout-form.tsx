@@ -56,15 +56,16 @@ export function CheckoutForm({
       });
       setIsProcessing(false);
     } else {
-      // Record payment in our system
+      // Record payment in our system with proper Stripe transaction ID
       try {
-        await apiRequest("POST", "/api/payments", {
-          appointmentId: appointment.id,
-          patientId: patient.id,
-          amount: paymentAmount,
-          paymentMethod: "card",
+        // Use the Stripe payment intent ID as the transaction ID
+        const { paymentIntent } = await stripe.retrievePaymentIntent(elements.getElement(PaymentElement).dataset.clientSecret);
+        
+        await apiRequest("POST", "/api/record-payment", {
+          paymentIntentId: paymentIntent.id,
           status: "completed",
-          transactionId: new Date().getTime().toString() // Normally this would come from Stripe
+          appointmentId: appointment.id,
+          patientId: patient.id
         });
 
         toast({

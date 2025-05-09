@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import nodemailer from "nodemailer";
-import { appointments, insertAppointmentSchema, insertPatientSchema, insertPaymentSchema, services, users, rooms } from "@shared/schema";
+import { appointments, insertAppointmentSchema, insertPatientSchema, insertPaymentSchema, services, users, rooms, schema } from "@shared/schema";
 import { z } from "zod";
 import { sendAppointmentConfirmation, sendPaymentReceipt } from "./email";
 import { db } from "./db";
