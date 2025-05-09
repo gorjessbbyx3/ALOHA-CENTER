@@ -15,17 +15,17 @@ if (dbType === 'memory' || dbType === DatabaseType.MEMORY) {
   console.log('Using in-memory database');
   
   // Import SQLite driver for in-memory database
-  const { drizzle } = require('drizzle-orm/better-sqlite3');
-  const Database = require('better-sqlite3');
+  import { drizzle as drizzleSqlite } from 'drizzle-orm/better-sqlite3';
+  import Database from 'better-sqlite3';
   
   // Create in-memory SQLite database
   const sqlite = new Database(':memory:');
-  db = drizzle(sqlite, { schema });
+  db = drizzleSqlite(sqlite, { schema });
   
 } else {
   // PostgreSQL connection for production
-  const { Pool } = require('pg');
-  const { drizzle: pgDrizzle } = require('drizzle-orm/node-postgres');
+  import { Pool } from 'pg';
+  import { drizzle as pgDrizzle } from 'drizzle-orm/node-postgres';
   
   // Get database credentials from environment variables
   const dbHost = process.env.DB_ENDPOINT || 'database-alohacenter.cshguag6ii9q.us-east-1.rds.amazonaws.com';
