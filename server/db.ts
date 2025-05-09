@@ -11,64 +11,82 @@ const dbType = process.env.DB_TYPE || 'memory';
 
 console.log(`Using database type: ${dbType}`);
 
-// Define variables to be exported
+// Define variables with proper initialization
 let pool;
 let db;
 
 // Initialize database based on configuration
 if (dbType === 'memory' || dbType === DatabaseType.MEMORY) {
-  console.log('Using in-memory database');
+  console.log('Using in-memory SQLite database');
   
-  // Create in-memory SQLite database
-  const sqlite = new Database(':memory:');
-  db = drizzleSqlite(sqlite, { schema });
-  
+  try {
+    // Create in-memory SQLite database
+    const sqlite = new Database(':memory:');
+    db = drizzleSqlite(sqlite, { schema });
+    
+    // Create schema tables immediately for SQLite
+    createSchemaIfNeeded().catch(err => {
+      console.error('Error creating schema tables:', err);
+    });
+  } catch (error) {
+    console.error('Error initializing SQLite database:', error);
+  }
 } else {
   console.log('Using PostgreSQL database');
   
-  // Get database credentials from environment variables
-  const dbHost = process.env.DB_ENDPOINT || 'database-alohacenter.cshguag6ii9q.us-east-1.rds.amazonaws.com';
-  const dbPort = Number(process.env.DB_PORT || '5432');
-  const dbName = process.env.DB_NAME || 'clinic_management';
-  const dbUser = process.env.DB_USERNAME || 'postgres';
-  const dbPassword = process.env.DB_PASSWORD;
+  try {
+    // Get database credentials from environment variables
+    const dbHost = process.env.DB_ENDPOINT || 'database-alohacenter.cshguag6ii9q.us-east-1.rds.amazonaws.com';
+    const dbPort = Number(process.env.DB_PORT || '5432');
+    const dbName = process.env.DB_NAME || 'clinic_management';
+    const dbUser = process.env.DB_USERNAME || 'postgres';
+    const dbPassword = process.env.DB_PASSWORD;
 
-  // Check if database credentials are available
-  if (!dbPassword) {
-    console.error('Database password not set. Please set DB_PASSWORD environment variable.');
-    throw new Error('DB_PASSWORD must be set for PostgreSQL connection');
-  }
-
-  // Create PostgreSQL connection pool
-  pool = new Pool({
-    host: dbHost,
-    port: dbPort,
-    database: dbName,
-    user: dbUser,
-    password: dbPassword,
-    ssl: {
-      rejectUnauthorized: false
+    // Check if database credentials are available
+    if (!dbPassword) {
+      console.error('Database password not set. Please set DB_PASSWORD environment variable.');
+      throw new Error('DB_PASSWORD must be set for PostgreSQL connection');
     }
-  });
 
-  // Initialize Drizzle ORM with connection pool
-  db = drizzlePg(pool, { schema });
-
-  // Test connection
-  pool.query('SELECT NOW()')
-    .then(res => {
-      console.log('Connected to PostgreSQL database:', dbHost);
-    })
-    .catch(err => {
-      console.error('Database connection error:', err);
-      console.error('Check your database credentials and connectivity');
+    // Create PostgreSQL connection pool
+    pool = new Pool({
+      host: dbHost,
+      port: dbPort,
+      database: dbName,
+      user: dbUser,
+      password: dbPassword,
+      ssl: {
+        rejectUnauthorized: false
+      }
     });
+
+    // Initialize Drizzle ORM with connection pool
+    db = drizzlePg(pool, { schema });
+
+    // Test connection
+    pool.query('SELECT NOW()')
+      .then(res => {
+        console.log('Connected to PostgreSQL database:', dbHost);
+      })
+      .catch(err => {
+        console.error('Database connection error:', err);
+        console.error('Check your database credentials and connectivity');
+      });
+  } catch (error) {
+    console.error('Error initializing PostgreSQL database:', error);
+  }
 }
 
 // Create schema tables for SQLite in-memory database
 async function createSchemaIfNeeded() {
   if (dbType === 'memory' || dbType === DatabaseType.MEMORY) {
     try {
+      // Skip if db is not initialized
+      if (!db || !db.run) {
+        console.error('Database not properly initialized for schema creation');
+        return;
+      }
+      
       // Create users table
       await db.run(`
         CREATE TABLE IF NOT EXISTS users (
@@ -176,15 +194,15 @@ async function createSchemaIfNeeded() {
         )
       `);
       
+      // Add other tables as needed for treatment plans, packages, etc.
+      
       console.log('Created schema tables for in-memory database');
     } catch (error) {
       console.error('Error creating schema tables:', error);
+      throw error;
     }
   }
 }
-
-// Run schema creation for in-memory database
-createSchemaIfNeeded();
 
 // Export the database connection
 export { pool, db };
