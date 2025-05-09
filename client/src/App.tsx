@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { VercelCompatibilityCheck } from "@/components/ui/vercel-compatibility";
+import { VercelDeploymentDiagnostics } from "@/components/ui/vercel-diagnostics";
 
 import Dashboard from "@/pages/dashboard";
 import Appointments from "@/pages/appointments";
