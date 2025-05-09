@@ -12,7 +12,7 @@ build = ["sh", "-c", "npm run build"]
 run = ["sh", "-c", "NODE_ENV=production DB_TYPE=aws-rds node dist/index.js"]
 
 [workflows]
-runButton = "Run Production Ready"
+runButton = "Run App with Fixed Schema"
 
 [[workflows.workflow]]
 name = "Run Development (Free)"
@@ -310,6 +310,15 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node check-aws-config.js"
+
+[[workflows.workflow]]
+name = "Run App with Fixed Schema"
+author = 42094346
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development DB_TYPE=memory STORAGE_TYPE=local npm run dev"
 
 [[ports]]
 localPort = 5000

@@ -183,6 +183,120 @@ async function createSchemaIfNeeded() {
         )
       `);
       
+      // Create treatment_packages table
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS treatment_packages (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          display_name TEXT NOT NULL,
+          description TEXT,
+          focus TEXT,
+          ideal_for TEXT,
+          duration TEXT,
+          session_type TEXT,
+          session_count INTEGER,
+          session_cost NUMERIC,
+          total_cost NUMERIC,
+          add_ons TEXT,
+          bonuses TEXT,
+          active BOOLEAN DEFAULT 1,
+          category TEXT DEFAULT 'standard',
+          package_type TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      // Create treatment_plans table
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS treatment_plans (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          patient_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          start_date TIMESTAMP NOT NULL,
+          end_date TIMESTAMP,
+          status TEXT NOT NULL DEFAULT 'active',
+          goals TEXT,
+          notes TEXT,
+          progress TEXT,
+          package_id INTEGER,
+          sessions_completed INTEGER DEFAULT 0,
+          total_sessions INTEGER,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (patient_id) REFERENCES patients(id),
+          FOREIGN KEY (package_id) REFERENCES treatment_packages(id)
+        )
+      `);
+      
+      // Create gift_cards table
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS gift_cards (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          code TEXT NOT NULL UNIQUE,
+          amount NUMERIC NOT NULL,
+          remaining_balance NUMERIC NOT NULL,
+          issued_to TEXT,
+          issued_email TEXT,
+          purchased_by INTEGER,
+          status TEXT NOT NULL DEFAULT 'active',
+          expiry_date TIMESTAMP,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          last_used TIMESTAMP,
+          FOREIGN KEY (purchased_by) REFERENCES patients(id)
+        )
+      `);
+      
+      // Create loyalty tables
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS loyalty_points (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          patient_id INTEGER NOT NULL,
+          points INTEGER NOT NULL DEFAULT 0,
+          total_earned INTEGER NOT NULL DEFAULT 0,
+          level TEXT DEFAULT 'bronze',
+          monthly_points_earned INTEGER DEFAULT 0,
+          referrals_count INTEGER DEFAULT 0,
+          birthday_month INTEGER,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (patient_id) REFERENCES patients(id)
+        )
+      `);
+      
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS loyalty_transactions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          patient_id INTEGER NOT NULL,
+          points INTEGER NOT NULL,
+          type TEXT NOT NULL,
+          source TEXT,
+          source_id INTEGER,
+          description TEXT,
+          dollars_spent NUMERIC,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (patient_id) REFERENCES patients(id)
+        )
+      `);
+      
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS loyalty_subscriptions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          patient_id INTEGER NOT NULL,
+          plan_type TEXT NOT NULL,
+          monthly_fee NUMERIC NOT NULL,
+          included_sessions INTEGER NOT NULL,
+          includes_reiki BOOLEAN DEFAULT 0,
+          includes_pet_add_on BOOLEAN DEFAULT 0,
+          start_date TIMESTAMP NOT NULL,
+          next_billing_date TIMESTAMP,
+          status TEXT DEFAULT 'active',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (patient_id) REFERENCES patients(id)
+        )
+      `);
+      
       // Create payments table
       await db.run(`
         CREATE TABLE IF NOT EXISTS payments (
