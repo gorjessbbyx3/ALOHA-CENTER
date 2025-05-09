@@ -11,7 +11,7 @@ build = ["sh", "-c", "npm run build"]
 run = ["sh", "-c", "NODE_ENV=production DB_TYPE=aws-rds node dist/index.js"]
 
 [workflows]
-runButton = "Run with AWS Database"
+runButton = "Run Fixed Development"
 
 [[workflows.workflow]]
 name = "Run Development (Free)"
