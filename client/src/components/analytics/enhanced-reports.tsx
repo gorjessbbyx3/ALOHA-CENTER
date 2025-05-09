@@ -153,3 +153,113 @@ export const EnhancedReports = () => {
     </div>
   );
 };
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DatePicker } from "@/components/ui/date-picker";
+
+interface ReportData {
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+    backgroundColor?: string;
+    borderColor?: string;
+    borderWidth?: number;
+  }[];
+}
+
+interface EnhancedReportsProps {
+  reportData?: ReportData;
+}
+
+export function EnhancedReports({ reportData }: EnhancedReportsProps) {
+  const [startDate, setStartDate] = React.useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = React.useState<Date | undefined>(new Date());
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Enhanced Reports</CardTitle>
+        <CardDescription>
+          Detailed analytics and reporting for your business
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <label className="text-sm font-medium mb-1 block">Start Date</label>
+              <DatePicker 
+                date={startDate} 
+                setDate={setStartDate}
+                placeholder="Select start date"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-sm font-medium mb-1 block">End Date</label>
+              <DatePicker 
+                date={endDate} 
+                setDate={setEndDate}
+                placeholder="Select end date"
+              />
+            </div>
+          </div>
+          
+          <Tabs defaultValue="appointments">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="appointments">Appointments</TabsTrigger>
+              <TabsTrigger value="revenue">Revenue</TabsTrigger>
+              <TabsTrigger value="patients">Patients</TabsTrigger>
+              <TabsTrigger value="services">Services</TabsTrigger>
+            </TabsList>
+            <TabsContent value="appointments" className="p-4 border rounded-md mt-2">
+              <h3 className="text-lg font-medium mb-2">Appointment Statistics</h3>
+              <p className="text-sm text-muted-foreground">
+                Select a date range to view detailed appointment statistics
+              </p>
+              {!reportData && (
+                <div className="h-40 flex items-center justify-center text-muted-foreground">
+                  No data available for the selected period
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="revenue" className="p-4 border rounded-md mt-2">
+              <h3 className="text-lg font-medium mb-2">Revenue Analysis</h3>
+              <p className="text-sm text-muted-foreground">
+                Revenue breakdown by service type and period
+              </p>
+              {!reportData && (
+                <div className="h-40 flex items-center justify-center text-muted-foreground">
+                  No data available for the selected period
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="patients" className="p-4 border rounded-md mt-2">
+              <h3 className="text-lg font-medium mb-2">Patient Demographics</h3>
+              <p className="text-sm text-muted-foreground">
+                Patient demographic information and trends
+              </p>
+              {!reportData && (
+                <div className="h-40 flex items-center justify-center text-muted-foreground">
+                  No data available for the selected period
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="services" className="p-4 border rounded-md mt-2">
+              <h3 className="text-lg font-medium mb-2">Service Popularity</h3>
+              <p className="text-sm text-muted-foreground">
+                Most popular services and treatments
+              </p>
+              {!reportData && (
+                <div className="h-40 flex items-center justify-center text-muted-foreground">
+                  No data available for the selected period
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

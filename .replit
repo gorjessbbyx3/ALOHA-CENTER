@@ -293,6 +293,24 @@ mode = "sequential"
 task = "shell.exec"
 args = "NODE_ENV=development DB_TYPE=memory STORAGE_TYPE=local npm run dev"
 
+[[workflows.workflow]]
+name = "Debug App"
+author = 42094346
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=5001 NODE_ENV=development DB_TYPE=memory STORAGE_TYPE=local npm run dev"
+
+[[workflows.workflow]]
+name = "Check AWS Configuration"
+author = 42094346
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node check-aws-config.js"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
