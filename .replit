@@ -14,79 +14,24 @@ run = ["sh", "-c", "NODE_ENV=production DB_TYPE=aws-rds node dist/index.js"]
 runButton = "Run Development (Free)"
 
 [[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
-waitForPort = 5000
-
-[[workflows.workflow]]
-name = "Run"
-author = 42094346
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
-
-[[workflows.workflow]]
-name = "Deploy to AWS"
-author = 42094346
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run build"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "NODE_ENV=production DB_TYPE=aws-rds npm run start"
-
-[[workflows.workflow]]
-name = "Deploy to AWS"
-author = 42094346
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run build"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "NODE_ENV=production DB_TYPE=aws-rds npm run start"
-
-[[workflows.workflow]]
-name = "Deploy Production"
-author = 42094346
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run build"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "NODE_ENV=production DB_TYPE=aws-rds npm run start"
-
-[[workflows.workflow]]
 name = "Run Development (Free)"
-author = 42094346
 mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "NODE_ENV=development DB_TYPE=memory npm run dev"
+
+[[workflows.workflow]]
+name = "Deploy to AWS"
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run build"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=production DB_TYPE=aws-rds npm run start"
 
 [[ports]]
 localPort = 5000

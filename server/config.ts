@@ -9,8 +9,8 @@ export enum DatabaseType {
   AWS_RDS = 'aws-rds'  // AWS RDS PostgreSQL database
 }
 
-// Force AWS RDS connection
-const dbType = DatabaseType.AWS_RDS;
+// Get database type from environment variables
+const dbType = (process.env.DB_TYPE as DatabaseType) || DatabaseType.MEMORY;
 
 // Export the appropriate storage implementation based on configuration
 export const storage = (() => {
