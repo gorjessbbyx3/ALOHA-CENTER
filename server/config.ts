@@ -9,6 +9,13 @@ export enum DatabaseType {
 }
 
 // Get database type from environment variables
+// Database configuration options
+export enum DatabaseType {
+  MEMORY = 'memory',  // In-memory database (for development/testing)
+  POSTGRES = 'postgres',  // Local PostgreSQL database
+  AWS_RDS = 'aws-rds'  // AWS RDS PostgreSQL database
+}
+
 const dbType = (process.env.DB_TYPE as DatabaseType) || DatabaseType.MEMORY;
 
 // Export the appropriate storage implementation from storage.ts
