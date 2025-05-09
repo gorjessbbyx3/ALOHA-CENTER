@@ -106,11 +106,55 @@ if (process.env.DB_TYPE === 'memory') {
   // Try to resolve the hostname first to check DNS
 const dns = require('dns').promises;
 
+// Run more detailed network diagnostics
+const { exec } = require('child_process');
+
+console.log(`Running network diagnostics to ${dbConfig.host}:${dbConfig.port}...`);
+
+// First resolve DNS to verify hostname resolution
 dns.lookup(dbConfig.host)
   .then(({ address, family }) => {
     console.log(`DNS resolved ${dbConfig.host} to ${address} (IPv${family})`);
     
-    // Continue with the connection attempt
+    // Try to ping the host to check basic connectivity
+    return new Promise((resolve, reject) => {
+      exec(`ping -c 3 ${dbConfig.host}`, (error, stdout, stderr) => {
+        console.log('Ping results:');
+        console.log(stdout || stderr || 'No output');
+        resolve();
+      });
+    });
+  })
+  .then(() => {
+    // Try a TCP connection check with timeout
+    console.log(`Testing TCP connection to ${dbConfig.host}:${dbConfig.port}...`);
+    const net = require('net');
+    return new Promise((resolve, reject) => {
+      const socket = new net.Socket();
+      socket.setTimeout(5000);
+      
+      socket.on('connect', () => {
+        console.log('TCP connection successful!');
+        socket.end();
+        resolve();
+      });
+      
+      socket.on('timeout', () => {
+        console.log('TCP connection timeout');
+        socket.destroy();
+        resolve();
+      });
+      
+      socket.on('error', (err) => {
+        console.log(`TCP connection error: ${err.message}`);
+        resolve();
+      });
+      
+      socket.connect(dbConfig.port, dbConfig.host);
+    });
+  })
+  .then(() => {
+    console.log('Attempting PostgreSQL connection...');
     return secondPool.query('SELECT NOW()');
   })
   .then(res => {
