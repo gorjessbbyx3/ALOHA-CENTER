@@ -179,5 +179,10 @@ async function seedInitialData() {
     }
   } catch (error) {
     console.error("Error seeding initial data:", error);
+    
+    // Check if it's a SQLite 'now()' function error and provide more specific information
+    if (error.message && error.message.includes("no such function: now")) {
+      console.log("SQLite does not support the 'now()' function. Using CURRENT_TIMESTAMP instead.");
+    }
   }
 }
