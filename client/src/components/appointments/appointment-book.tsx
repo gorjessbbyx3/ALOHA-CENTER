@@ -364,13 +364,14 @@ export function AppointmentBook() {
       </div>
 
       {/* Calendar Grid */}
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="w-full justify-start mb-4">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          <TabsTrigger value="past">Past</TabsTrigger>
-        </TabsList>
-        <TabsContent value="all" className="mt-0">
+      <div className="relative w-full">
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="w-full justify-start mb-4">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+            <TabsTrigger value="past">Past</TabsTrigger>
+          </TabsList>
+          <TabsContent value="all" className="mt-0">
           {loadingAppointments ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -418,7 +419,18 @@ export function AppointmentBook() {
             </div>
           )}
         </TabsContent>
-      </Tabs>
+          <TabsContent value="upcoming" className="mt-0">
+            <div className="flex items-center justify-center h-64">
+              <p>Upcoming appointments will appear here</p>
+            </div>
+          </TabsContent>
+          <TabsContent value="past" className="mt-0">
+            <div className="flex items-center justify-center h-64">
+              <p>Past appointments will appear here</p>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
       
       {/* Appointment Form */}
       {isAppointmentFormOpen && (
