@@ -11,11 +11,11 @@ const dbType = process.env.DB_TYPE || 'memory';
 
 console.log(`Using database type: ${dbType}`);
 
-// Define variables outside conditional blocks
+// Define variables to be exported
 let pool;
 let db;
 
-// Handle different database types
+// Initialize database based on configuration
 if (dbType === 'memory' || dbType === DatabaseType.MEMORY) {
   console.log('Using in-memory database');
   
@@ -24,6 +24,8 @@ if (dbType === 'memory' || dbType === DatabaseType.MEMORY) {
   db = drizzleSqlite(sqlite, { schema });
   
 } else {
+  console.log('Using PostgreSQL database');
+  
   // Get database credentials from environment variables
   const dbHost = process.env.DB_ENDPOINT || 'database-alohacenter.cshguag6ii9q.us-east-1.rds.amazonaws.com';
   const dbPort = Number(process.env.DB_PORT || '5432');
@@ -59,10 +61,130 @@ if (dbType === 'memory' || dbType === DatabaseType.MEMORY) {
     })
     .catch(err => {
       console.error('Database connection error:', err);
-      // Don't crash the app, but log the error
       console.error('Check your database credentials and connectivity');
     });
 }
+
+// Create schema tables for SQLite in-memory database
+async function createSchemaIfNeeded() {
+  if (dbType === 'memory' || dbType === DatabaseType.MEMORY) {
+    try {
+      // Create users table
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT NOT NULL UNIQUE,
+          password TEXT NOT NULL,
+          email TEXT NOT NULL,
+          name TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'patient'
+        )
+      `);
+      
+      // Create patients table
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS patients (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER,
+          patient_id TEXT NOT NULL UNIQUE,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL,
+          phone TEXT,
+          date_of_birth TIMESTAMP,
+          address TEXT,
+          insurance_provider TEXT,
+          insurance_number TEXT,
+          last_visit TIMESTAMP,
+          status TEXT DEFAULT 'active',
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      `);
+      
+      // Create services table
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS services (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          description TEXT,
+          duration INTEGER NOT NULL,
+          price NUMERIC NOT NULL
+        )
+      `);
+      
+      // Create rooms table
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS rooms (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          description TEXT,
+          capacity INTEGER DEFAULT 1,
+          is_active BOOLEAN DEFAULT true
+        )
+      `);
+      
+      // Create appointments table
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS appointments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          patient_id INTEGER,
+          service_id INTEGER,
+          room_id INTEGER,
+          date TIMESTAMP NOT NULL,
+          time TEXT NOT NULL,
+          duration INTEGER NOT NULL,
+          status TEXT NOT NULL DEFAULT 'scheduled',
+          notes TEXT,
+          payment_status TEXT DEFAULT 'pending',
+          payment_amount NUMERIC,
+          payment_method TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (patient_id) REFERENCES patients(id),
+          FOREIGN KEY (service_id) REFERENCES services(id),
+          FOREIGN KEY (room_id) REFERENCES rooms(id)
+        )
+      `);
+      
+      // Create payments table
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS payments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          appointment_id INTEGER,
+          patient_id INTEGER,
+          amount NUMERIC NOT NULL,
+          payment_method TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          transaction_id TEXT,
+          stripe_payment_intent_id TEXT,
+          date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          invoice_pdf_path TEXT,
+          FOREIGN KEY (appointment_id) REFERENCES appointments(id),
+          FOREIGN KEY (patient_id) REFERENCES patients(id)
+        )
+      `);
+      
+      // Create activities table
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS activities (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          type TEXT NOT NULL,
+          description TEXT NOT NULL,
+          entity_id INTEGER,
+          entity_type TEXT,
+          user_id INTEGER,
+          timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      `);
+      
+      console.log('Created schema tables for in-memory database');
+    } catch (error) {
+      console.error('Error creating schema tables:', error);
+    }
+  }
+}
+
+// Run schema creation for in-memory database
+createSchemaIfNeeded();
 
 // Export the database connection
 export { pool, db };
