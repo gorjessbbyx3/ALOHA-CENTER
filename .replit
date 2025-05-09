@@ -12,7 +12,7 @@ build = ["sh", "-c", "npm run build"]
 run = ["sh", "-c", "NODE_ENV=production DB_TYPE=aws-rds node dist/index.js"]
 
 [workflows]
-runButton = "Run Fixed App with Dev Mode"
+runButton = "Run Fixed Application"
 
 [[workflows.workflow]]
 name = "Run Development (Free)"
@@ -274,6 +274,15 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "NODE_ENV=development REPLIT_DISABLE_PACKAGE_LAYER=1 npm run dev"
+
+[[workflows.workflow]]
+name = "Run Fixed Application"
+author = 42094346
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development DB_TYPE=memory STORAGE_TYPE=local npm run dev"
 
 [[ports]]
 localPort = 5000

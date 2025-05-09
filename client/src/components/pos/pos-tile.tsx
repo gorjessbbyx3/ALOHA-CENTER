@@ -34,13 +34,6 @@ type Customer = {
   avatar?: string | null;
 };
 
-const PosTile = () => {
-  const [giftCardCode, setGiftCardCode] = useState("");
-  const [giftCardAmount, setGiftCardAmount] = useState("");
-  const [giftCardInfo, setGiftCardInfo] = useState(null);
-  const [giftCardError, setGiftCardError] = useState("");
-  const [isValidatingGiftCard, setIsValidatingGiftCard] = useState(false);
-
 type CartItem = {
   id: number;
   name: string;
@@ -53,6 +46,11 @@ type CartItem = {
 type CheckoutStage = "cart" | "payment" | "receipt";
 
 export const PosTile = () => {
+  const [giftCardCode, setGiftCardCode] = useState("");
+  const [giftCardAmount, setGiftCardAmount] = useState("");
+  const [giftCardInfo, setGiftCardInfo] = useState(null);
+  const [giftCardError, setGiftCardError] = useState("");
+  const [isValidatingGiftCard, setIsValidatingGiftCard] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -318,7 +316,7 @@ export const PosTile = () => {
                       type="number"
                       className="w-24 h-8 text-sm"
                       min="0.01"
-                      max={parseFloat(giftCardInfo.remainingBalance)}
+                      max={giftCardInfo.remainingBalance ? parseFloat(giftCardInfo.remainingBalance) : 0}
                       step="0.01"
                       value={giftCardAmount}
                       onChange={(e) => setGiftCardAmount(e.target.value)}
