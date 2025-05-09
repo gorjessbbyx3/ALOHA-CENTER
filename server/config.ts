@@ -1,6 +1,5 @@
 import { AWSStorage } from './aws-storage';
-import { DatabaseStorage } from './storage';
-import { MemStorage } from './storage';
+import { storage, Storage } from './storage';
 
 // Database configuration options
 export enum DatabaseType {
@@ -12,30 +11,9 @@ export enum DatabaseType {
 // Get database type from environment variables
 const dbType = (process.env.DB_TYPE as DatabaseType) || DatabaseType.MEMORY;
 
-// Export the appropriate storage implementation based on configuration
-export const storage = (() => {
-  console.log(`Using database type: ${dbType}`);
-  
-  switch (dbType) {
-    case DatabaseType.AWS_RDS:
-      if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-        console.error('AWS credentials not found. Defaulting to PostgreSQL database.');
-        return new DatabaseStorage();
-      }
-      return new AWSStorage();
-      
-    case DatabaseType.POSTGRES:
-      if (!process.env.DATABASE_URL) {
-        console.error('DATABASE_URL not found. Defaulting to in-memory database.');
-        return new MemStorage();
-      }
-      return new DatabaseStorage();
-      
-    case DatabaseType.MEMORY:
-    default:
-      return new MemStorage();
-  }
-})();
+// Export the appropriate storage implementation from storage.ts
+// The storage variable is already exported from './storage'
+console.log(`Using database type: ${dbType}`);
 
 // Application configuration
 export const config = {

@@ -11,7 +11,7 @@ build = ["sh", "-c", "npm run build"]
 run = ["sh", "-c", "NODE_ENV=production DB_TYPE=aws-rds node dist/index.js"]
 
 [workflows]
-runButton = "Run Development"
+runButton = "Run Development (Fixed)"
 
 [[workflows.workflow]]
 name = "Run Development (Free)"
@@ -114,6 +114,15 @@ args = "DB_TYPE=postgres DB_ENDPOINT=database-alohacenter.cshguag6ii9q.us-east-1
 
 [[workflows.workflow]]
 name = "Run Development"
+author = 42094346
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development DB_TYPE=memory STORAGE_TYPE=local npm run dev"
+
+[[workflows.workflow]]
+name = "Run Development (Fixed)"
 author = 42094346
 mode = "sequential"
 
