@@ -19,7 +19,7 @@ export default function Settings() {
   const { toast } = useToast();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
-  
+
   // Location state management
   const [isLocationFormOpen, setIsLocationFormOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -49,41 +49,41 @@ export default function Settings() {
       return loc;
     });
     setLocations(updatedLocations);
-    
+
     toast({
       title: location.isActive ? "Location deactivated" : "Location activated",
       description: `${location.name} has been ${location.isActive ? "deactivated" : "activated"}.`,
     });
   };
-  
+
   const handleSaveNotifications = () => {
     toast({
       title: "Notification settings saved",
       description: "Your notification preferences have been updated.",
     });
   };
-  
+
   const handleSaveGeneral = () => {
     toast({
       title: "Clinic information saved",
       description: "Your clinic information has been updated.",
     });
   };
-  
+
   const handleSavePaymentSettings = () => {
     toast({
       title: "Payment settings saved",
       description: "Your payment settings have been updated.",
     });
   };
-  
+
   const handleSaveStripeSetting = () => {
     toast({
       title: "Stripe API keys saved",
       description: "Your Stripe API settings have been updated.",
     });
   };
-  
+
   return (
     <AdminLayout 
       title="Settings" 
@@ -98,7 +98,7 @@ export default function Settings() {
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
-        
+
         {/* General Settings */}
         <TabsContent value="general">
           <Card>
@@ -121,7 +121,7 @@ export default function Settings() {
                   </div>
                 </div>
 
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
@@ -132,23 +132,23 @@ export default function Settings() {
                     <Input id="website" defaultValue="https://alohalightcenter.com" />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="address">Address</Label>
                   <Textarea id="address" defaultValue="123 Aloha Way, Honolulu, HI 96815" />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="businessHours">Business Hours</Label>
                   <Textarea id="businessHours" defaultValue="Monday-Friday: 8:00 AM - 5:00 PM&#10;Saturday: 9:00 AM - 1:00 PM&#10;Sunday: Closed" />
                 </div>
               </div>
-              
+
               <Button onClick={handleSaveGeneral}>Save Changes</Button>
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         {/* Location Management Tab */}
         <TabsContent value="locations" className="space-y-4">
             <Card>
@@ -230,7 +230,7 @@ export default function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
-        
+
         {/* Notification Settings */}
         <TabsContent value="notifications">
           <Card>
@@ -255,7 +255,7 @@ export default function Settings() {
                     onCheckedChange={setEmailNotifications}
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="smsNotifications">SMS Notifications</Label>
@@ -269,7 +269,7 @@ export default function Settings() {
                     onCheckedChange={setSmsNotifications}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="reminderTiming">Appointment Reminder Timing</Label>
                   <Select defaultValue="24h">
@@ -285,7 +285,7 @@ export default function Settings() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="emailTemplate">Email Template</Label>
                   <Select defaultValue="default">
@@ -300,12 +300,12 @@ export default function Settings() {
                   </Select>
                 </div>
               </div>
-              
+
               <Button onClick={handleSaveNotifications}>Save Preferences</Button>
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         {/* Payment Settings */}
         <TabsContent value="payments">
           <Card>
@@ -325,18 +325,18 @@ export default function Settings() {
                     </svg>
                     <h3 className="text-lg font-medium">Stripe Integration</h3>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="stripePublicKey">Stripe Public Key</Label>
                       <Input id="stripePublicKey" defaultValue="pk_test_..." />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="stripeSecretKey">Stripe Secret Key</Label>
                       <Input id="stripeSecretKey" type="password" defaultValue="sk_test_..." />
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label htmlFor="testMode">Test Mode</Label>
@@ -346,11 +346,11 @@ export default function Settings() {
                       </div>
                       <Switch id="testMode" defaultChecked />
                     </div>
-                    
+
                     <Button onClick={handleSaveStripeSetting}>Save Stripe Settings</Button>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="currency">Default Currency</Label>
                   <Select defaultValue="usd">
@@ -365,7 +365,7 @@ export default function Settings() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Accepted Payment Methods</Label>
                   <div className="flex flex-wrap gap-2 pt-2">
@@ -388,12 +388,12 @@ export default function Settings() {
                   </div>
                 </div>
               </div>
-              
+
               <Button onClick={handleSavePaymentSettings}>Save Payment Settings</Button>
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         {/* User Settings */}
         <TabsContent value="users">
           <Card>
@@ -409,7 +409,7 @@ export default function Settings() {
                   <h3 className="text-lg font-medium">Staff Accounts</h3>
                   <Button variant="outline">Add New User</Button>
                 </div>
-                
+
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -464,13 +464,13 @@ export default function Settings() {
                     </tbody>
                   </table>
                 </div>
-                
+
                 <div className="space-y-2 pt-4">
                   <h3 className="text-lg font-medium">Role Permissions</h3>
                   <p className="text-sm text-muted-foreground">
                     Configure access permissions for each role in the system.
                   </p>
-                  
+
                   <div className="border rounded-md p-4 mt-2">
                     <h4 className="font-medium mb-2">Admin</h4>
                     <p className="text-sm text-gray-500 mb-2">Full access to all features and settings</p>
@@ -499,8 +499,7 @@ export default function Settings() {
           </Card>
         </TabsContent>
       </Tabs>
-    </AdminLayout>
-    
+
     {/* Location Form Modal */}
     {isLocationFormOpen && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">

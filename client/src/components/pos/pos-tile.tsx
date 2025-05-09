@@ -86,29 +86,30 @@ export const PosTile = () => {
   } = useQuery<Customer[]>({ 
     queryKey: ['/api/pos/customers'],
 
-  const validateGiftCard = async () => {
+  function validateGiftCard() {
     if (!giftCardCode) return;
     
     setIsValidatingGiftCard(true);
     setGiftCardError("");
     
-    try {
-      const response = await fetch(`/api/gift-cards/validate/${giftCardCode}`);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        setGiftCardError(data.message || "Invalid gift card code");
+    fetch(`/api/gift-cards/validate/${giftCardCode}`)
+      .then(response => response.json())
+      .then(data => {
+        if (!response.ok) {
+          setGiftCardError(data.message || "Invalid gift card code");
+          setGiftCardInfo(null);
+        } else {
+          setGiftCardInfo(data.giftCard);
+        }
+      })
+      .catch(error => {
+        setGiftCardError("Error validating gift card");
         setGiftCardInfo(null);
-      } else {
-        setGiftCardInfo(data.giftCard);
-      }
-    } catch (error) {
-      setGiftCardError("Error validating gift card");
-      setGiftCardInfo(null);
-    } finally {
-      setIsValidatingGiftCard(false);
-    }
-  };
+      })
+      .finally(() => {
+        setIsValidatingGiftCard(false);
+      });
+  }
   
   const applyGiftCard = () => {
     if (!giftCardInfo || !giftCardAmount) return;
