@@ -4,7 +4,7 @@ import {
   Settings, Plus, Edit, Trash, 
   ClipboardList, Grid, UserPlus, 
   DoorOpen, Store, CalendarPlus,
-  Palette, Type, LayoutGrid, Eye, EyeOff
+  Palette, Type, LayoutGrid, Eye, EyeOff, Gift, Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -33,11 +33,11 @@ export const ManageTile = () => {
 
   const [isGiftCardFormOpen, setIsGiftCardFormOpen] = useState(false);
 
-  
+
   // Welcome text and dashboard options state
   const [welcomeText, setWelcomeText] = useState("Welcome to your Admin dashboard");
   const [dashboardTitle, setDashboardTitle] = useState("Aloha Healing Center");
-  
+
   // Dashboard display options
   const [showAppointmentTile, setShowAppointmentTile] = useState(true);
   const [showPosTile, setShowPosTile] = useState(true);
@@ -47,12 +47,12 @@ export const ManageTile = () => {
   const [showStickyNotes, setShowStickyNotes] = useState(true);
   const [showTimeClockTile, setShowTimeClockTile] = useState(true);
   const [showDateTimeTile, setShowDateTimeTile] = useState(true);
-  
+
   // Fetch services data
   const { data: services = [] } = useQuery<Service[]>({
     queryKey: ["/api/services"],
   });
-  
+
   // Fetch rooms data
   const { data: rooms = [] } = useQuery<Room[]>({
     queryKey: ["/api/rooms"],
@@ -67,7 +67,7 @@ export const ManageTile = () => {
         title: "Appearance settings saved",
         description: "Your dashboard appearance preferences have been updated.",
       });
-      
+
       // In a real implementation, we would update this in a global state or context
       // so that other components can access the updated values
       window.localStorage.setItem('welcomeText', welcomeText);
@@ -82,7 +82,7 @@ export const ManageTile = () => {
         showTimeClockTile,
         showDateTimeTile
       }));
-      
+
       // We're not closing the dialog in this case to let users continue editing
     } else {
       toast({
@@ -120,7 +120,7 @@ export const ManageTile = () => {
             </div>
           </div>
         </DialogTrigger>
-        
+
         <DialogContent className="max-w-4xl w-[90vw] max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Clinic Management</DialogTitle>
@@ -128,7 +128,7 @@ export const ManageTile = () => {
               Configure and manage various aspects of your clinic
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="mt-4 h-[calc(80vh-120px)]">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="h-full flex flex-col">
               <TabsList className="grid grid-cols-6 mb-4">
@@ -157,7 +157,7 @@ export const ManageTile = () => {
                   Settings
                 </TabsTrigger>
               </TabsList>
-              
+
               {/* Services Tab */}
               <TabsContent value="services" className="h-full flex-1 flex flex-col">
                 <div className="flex justify-between mb-4">
@@ -167,7 +167,7 @@ export const ManageTile = () => {
                     Add Service
                   </Button>
                 </div>
-                
+
                 <ScrollArea className="flex-1 border rounded-md p-4">
                   <div className="space-y-3">
                     {services.map((service) => (
@@ -191,7 +191,7 @@ export const ManageTile = () => {
                         </CardContent>
                       </Card>
                     ))}
-                    
+
                     {services.length === 0 && (
                       <div className="flex flex-col items-center justify-center h-40">
                         <ClipboardList className="h-10 w-10 text-muted-foreground mb-2" />
@@ -209,7 +209,7 @@ export const ManageTile = () => {
                   </div>
                 </ScrollArea>
               </TabsContent>
-              
+
               {/* Rooms Tab */}
               <TabsContent value="rooms" className="h-full flex-1 flex flex-col">
                 <div className="flex justify-between mb-4">
@@ -219,7 +219,7 @@ export const ManageTile = () => {
                     Add Room
                   </Button>
                 </div>
-                
+
                 <ScrollArea className="flex-1 border rounded-md p-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {rooms.map((room) => (
@@ -261,32 +261,8 @@ export const ManageTile = () => {
                         </CardContent>
                       </Card>
                     ))}
-                    
+
                     {rooms.length === 0 && (
-
-{/* Gift Cards Section */}
-              <div className="space-y-1">
-                <h3 className="font-medium">Gift Cards</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => setIsGiftCardFormOpen(true)}
-                  >
-                    <Gift className="h-4 w-4 mr-2" />
-                    Create Gift Card
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={() => alert("This would open a gift card lookup and management screen")}
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    Find Gift Card
-                  </Button>
-                </div>
-              </div>
-
                       <div className="flex flex-col items-center justify-center h-40 col-span-2">
                         <DoorOpen className="h-10 w-10 text-muted-foreground mb-2" />
                         <p className="text-muted-foreground">No rooms available</p>
@@ -303,7 +279,7 @@ export const ManageTile = () => {
                   </div>
                 </ScrollArea>
               </TabsContent>
-              
+
               {/* Staff Tab */}
               <TabsContent value="staff" className="h-full flex-1 flex flex-col">
                 <div className="flex justify-between mb-4">
@@ -319,7 +295,7 @@ export const ManageTile = () => {
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                   <Card>
                     <CardContent className="pt-6">
@@ -361,7 +337,7 @@ export const ManageTile = () => {
                       </div>
                     </CardContent>
                   </Card>
-                  
+
                   <Card>
                     <CardContent className="pt-6">
                       <div className="text-center">
@@ -378,7 +354,7 @@ export const ManageTile = () => {
                     </CardContent>
                   </Card>
                 </div>
-                
+
                 {/* User Permissions Section */}
                 <div className="flex-1">
                   <Card>
@@ -400,16 +376,9 @@ export const ManageTile = () => {
                               <span className="bg-purple-100 text-purple-800 px-2 py-0.5 text-xs rounded-full mr-2">Tech</span>
                               <span className="text-sm">View only</span>
                             </div>
-
-      {/* Gift Card Form Dialog */}
-      <GiftCardForm 
-        open={isGiftCardFormOpen} 
-        onOpenChange={setIsGiftCardFormOpen} 
-      />
-
                           </div>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <h4 className="font-medium text-sm">Patients</h4>
                           <div className="space-y-1">
@@ -427,7 +396,7 @@ export const ManageTile = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <h4 className="font-medium text-sm">Billing</h4>
                           <div className="space-y-1">
@@ -446,14 +415,14 @@ export const ManageTile = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <Button className="mt-4" variant="outline" onClick={() => handleAction("manage-permissions")}>
                         Manage Role Permissions
                       </Button>
                     </CardContent>
                   </Card>
                 </div>
-                
+
                 {/* Create User Dialog */}
                 <Dialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen}>
                   <DialogContent className="sm:max-w-[425px]">
@@ -524,7 +493,7 @@ export const ManageTile = () => {
                           </select>
                         </div>
                       </div>
-                      
+
                       <div className="space-y-3 mt-2">
                         <h4 className="text-sm font-medium">Permissions</h4>
                         <div className="grid grid-cols-2 gap-4">
@@ -626,7 +595,7 @@ export const ManageTile = () => {
                   </DialogContent>
                 </Dialog>
               </TabsContent>
-              
+
               {/* Schedule Tab */}
               <TabsContent value="schedule" className="h-full flex-1 flex flex-col">
                 <div className="flex justify-between mb-4">
@@ -636,7 +605,7 @@ export const ManageTile = () => {
                     Edit Hours
                   </Button>
                 </div>
-                
+
                 <div className="flex-1 border rounded-md p-4 flex items-center justify-center">
                   <div className="text-center">
                     <CalendarPlus className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -650,7 +619,7 @@ export const ManageTile = () => {
                   </div>
                 </div>
               </TabsContent>
-              
+
               {/* Appearance Tab */}
               <TabsContent value="appearance" className="h-full flex-1 flex flex-col">
                 <div className="flex justify-between mb-4">
@@ -660,7 +629,7 @@ export const ManageTile = () => {
                     Save Changes
                   </Button>
                 </div>
-                
+
                 <ScrollArea className="flex-1 border rounded-md p-5">
                   <div className="space-y-6">
                     <div className="space-y-4">
@@ -669,7 +638,7 @@ export const ManageTile = () => {
                         Text Customization
                       </h4>
                       <Separator />
-                      
+
                       <div className="grid gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="dashboardTitle">Dashboard Title</Label>
@@ -681,7 +650,7 @@ export const ManageTile = () => {
                           />
                           <p className="text-xs text-muted-foreground">This appears at the top of the dashboard.</p>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <Label htmlFor="welcomeText">Welcome Message</Label>
                           <Input 
@@ -694,14 +663,14 @@ export const ManageTile = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-4 pt-4">
                       <h4 className="text-base font-medium flex items-center">
                         <LayoutGrid className="h-4 w-4 mr-2" />
                         Dashboard Tiles Display
                       </h4>
                       <Separator />
-                      
+
                       <div className="grid gap-3">
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
@@ -714,9 +683,9 @@ export const ManageTile = () => {
                             onCheckedChange={setShowAppointmentTile}
                           />
                         </div>
-                        
+
                         <Separator />
-                        
+
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
                             <Label htmlFor="showPosTile">Point of Sale (POS) Tile</Label>
@@ -728,9 +697,9 @@ export const ManageTile = () => {
                             onCheckedChange={setShowPosTile}
                           />
                         </div>
-                        
+
                         <Separator />
-                        
+
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
                             <Label htmlFor="showMenuTile">Services Menu Tile</Label>
@@ -742,9 +711,9 @@ export const ManageTile = () => {
                             onCheckedChange={setShowMenuTile}
                           />
                         </div>
-                        
+
                         <Separator />
-                        
+
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
                             <Label htmlFor="showUpcomingAppointments">Upcoming Appointments Tile</Label>
@@ -756,9 +725,9 @@ export const ManageTile = () => {
                             onCheckedChange={setShowUpcomingAppointments}
                           />
                         </div>
-                        
+
                         <Separator />
-                        
+
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
                             <Label htmlFor="showAnalyticsTile">Analytics Tile</Label>
@@ -770,9 +739,9 @@ export const ManageTile = () => {
                             onCheckedChange={setShowAnalyticsTile}
                           />
                         </div>
-                        
+
                         <Separator />
-                        
+
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
                             <Label htmlFor="showStickyNotes">Sticky Notes Tile</Label>
@@ -784,9 +753,9 @@ export const ManageTile = () => {
                             onCheckedChange={setShowStickyNotes}
                           />
                         </div>
-                        
+
                         <Separator />
-                        
+
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
                             <Label htmlFor="showTimeClockTile">Time Clock Tile</Label>
@@ -798,9 +767,9 @@ export const ManageTile = () => {
                             onCheckedChange={setShowTimeClockTile}
                           />
                         </div>
-                        
+
                         <Separator />
-                        
+
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
                             <Label htmlFor="showDateTimeTile">Date & Time Tile</Label>
@@ -817,7 +786,7 @@ export const ManageTile = () => {
                   </div>
                 </ScrollArea>
               </TabsContent>
-              
+
               {/* General Settings Tab */}
               <TabsContent value="general" className="h-full flex-1 flex flex-col">
                 <div className="flex justify-between mb-4">
@@ -826,7 +795,7 @@ export const ManageTile = () => {
                     Save Changes
                   </Button>
                 </div>
-                
+
                 <div className="flex-1 border rounded-md p-4 flex items-center justify-center">
                   <div className="text-center">
                     <Settings className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -835,7 +804,7 @@ export const ManageTile = () => {
                       Configure your clinic's details, branding, notification preferences, and more.
                     </p>
                     <Button onClick={() => handleAction("configure-clinic")}>
-                      Configure Settings
+                      Configure                      Settings
                     </Button>
                   </div>
                 </div>
@@ -844,6 +813,12 @@ export const ManageTile = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+{/* Gift Card Form Dialog */}
+      <GiftCardForm 
+        open={isGiftCardFormOpen} 
+        onOpenChange={setIsGiftCardFormOpen} 
+      />
     </>
   );
 };
