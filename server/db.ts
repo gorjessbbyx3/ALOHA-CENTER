@@ -1,6 +1,6 @@
 
 import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/pg';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from "@shared/schema";
 
 // Get database credentials from environment variables
