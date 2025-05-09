@@ -72,6 +72,19 @@ args = "npm run build"
 task = "shell.exec"
 args = "NODE_ENV=production DB_TYPE=aws-rds npm run start"
 
+[[workflows.workflow]]
+name = "Test AWS Database Connection"
+author = 42094346
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "DB_TYPE=aws-rds npm run build"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=production DB_TYPE=aws-rds npm run start"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
