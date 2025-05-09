@@ -1,6 +1,6 @@
 
 import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/pg-pool';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
 // Get database credentials from environment variables
@@ -32,10 +32,12 @@ export const pool = new Pool({
 export const db = drizzle(pool, { schema });
 
 // Test connection
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('Database connection error:', err);
-  } else {
+pool.query('SELECT NOW()')
+  .then(res => {
     console.log('Connected to PostgreSQL database:', dbHost);
-  }
-});
+  })
+  .catch(err => {
+    console.error('Database connection error:', err);
+    // Don't crash the app, but log the error
+    console.error('Check your database credentials and connectivity');
+  });
