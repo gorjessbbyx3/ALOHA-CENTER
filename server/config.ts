@@ -50,7 +50,9 @@ export const config = {
     dbInstanceIdentifier: process.env.DB_INSTANCE_IDENTIFIER,
     dbName: process.env.DB_NAME || 'clinic_management',
     secretArn: process.env.DB_SECRET_ARN,
-    resourceArn: process.env.DB_RESOURCE_ARN
+    resourceArn: process.env.DB_RESOURCE_ARN,
+    s3Bucket: process.env.S3_BUCKET || 'ac-terminal-bucket--use1-az4--x-s3',
+    s3BucketArn: process.env.S3_BUCKET_ARN || 'arn:aws:s3express:us-east-1:631289602258:bucket/ac-terminal-bucket--use1-az4--x-s3'
   },
   
   // Stripe configuration

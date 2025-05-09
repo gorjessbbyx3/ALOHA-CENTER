@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { checkS3Connection } from "./aws-s3";
 
 const app = express();
 app.use(express.json());
@@ -85,7 +86,19 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
+    
+    // Check S3 connection
+    try {
+      const s3Connected = await checkS3Connection();
+      if (s3Connected) {
+        log('S3 connection successful');
+      } else {
+        log('S3 connection failed - file storage may not work properly');
+      }
+    } catch (error) {
+      log('Error checking S3 connection:', error);
+    }
   });
 })();
