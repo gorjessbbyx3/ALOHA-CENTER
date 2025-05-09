@@ -119,7 +119,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "NODE_ENV=development DB_TYPE=memory STORAGE_TYPE=local npm run dev"
+args = "NODE_ENV=development DB_TYPE=memory npm run dev"
 
 [[ports]]
 localPort = 5000
