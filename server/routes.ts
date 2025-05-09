@@ -41,7 +41,8 @@ async function seedInitialData() {
       { name: "Lab Work", description: "Blood work and tests", duration: 30, price: "80" },
       { name: "Group Light Therapy (2hr)", description: "2-hour light therapy session in our group room", duration: 120, price: "60" },
       { name: "Private Light Therapy (2hr)", description: "2-hour light therapy session in a private room", duration: 120, price: "100" },
-      { name: "Private Light Therapy with Pet (2hr)", description: "2-hour light therapy session in a private room with your pet", duration: 120, price: "120" }
+      { name: "Private Light Therapy with Pet (2hr)", description: "2-hour light therapy session in a private room with your pet", duration: 120, price: "120" },
+      { name: "Reiki Session (30min)", description: "30-minute Reiki energy healing session in a private room", duration: 30, price: "100" }
     ]);
   }
 </old_str>

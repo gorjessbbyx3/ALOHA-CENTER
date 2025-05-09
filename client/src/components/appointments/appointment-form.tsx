@@ -45,6 +45,8 @@ const appointmentFormSchema = z.object({
   notes: z.string().optional(),
   paymentMethod: z.enum(["insurance", "card", "cash"]),
   roomId: z.string().optional(),
+  setupTime: z.string().default("0"),
+  cleanupTime: z.string().default("0"),
 });
 
 type AppointmentFormValues = z.infer<typeof appointmentFormSchema>;
@@ -102,6 +104,8 @@ export function AppointmentForm({
       notes: "",
       paymentMethod: "insurance",
       roomId: "",
+      setupTime: "0",
+      cleanupTime: "0",
     },
   });
   
@@ -120,6 +124,8 @@ export function AppointmentForm({
         notes: appointmentData.notes || "",
         paymentMethod: appointmentData.paymentMethod as "insurance" | "card" | "cash" || "insurance",
         roomId: appointmentData.roomId ? appointmentData.roomId.toString() : "",
+        setupTime: appointmentData.setupTime || "0",
+        cleanupTime: appointmentData.cleanupTime || "0",
       });
     } else {
       setIsEditMode(false);
@@ -131,6 +137,8 @@ export function AppointmentForm({
         notes: "",
         paymentMethod: "insurance",
         roomId: "",
+        setupTime: "0",
+        cleanupTime: "0",
       });
     }
   }, [appointmentId, appointmentData, form]);
@@ -144,13 +152,23 @@ export function AppointmentForm({
     mutationFn: async (data: AppointmentFormValues) => {
       const { patientId, serviceId, roomId, ...rest } = data;
       
+      const { setupTime, cleanupTime, ...otherRest } = rest;
+      
+      // Calculate total duration including setup and cleanup
+      const serviceDuration = selectedService?.duration || 30;
+      const setupMinutes = parseInt(setupTime) || 0;
+      const cleanupMinutes = parseInt(cleanupTime) || 0;
+      const totalDuration = serviceDuration + setupMinutes + cleanupMinutes;
+      
       const appointmentData = {
         patientId: parseInt(patientId),
         serviceId: parseInt(serviceId),
         roomId: roomId ? parseInt(roomId) : null,
-        duration: selectedService?.duration || 30, // Default to 30 minutes if no service selected
+        duration: totalDuration,
+        setupTime: setupMinutes,
+        cleanupTime: cleanupMinutes,
         status: "scheduled",
-        ...rest,
+        ...otherRest,
       };
       
       const response = await apiRequest("POST", "/api/appointments", appointmentData);
@@ -184,12 +202,22 @@ export function AppointmentForm({
       
       const { patientId, serviceId, roomId, ...rest } = data;
       
+      const { setupTime, cleanupTime, ...otherRest } = rest;
+      
+      // Calculate total duration including setup and cleanup
+      const serviceDuration = selectedService?.duration || 30;
+      const setupMinutes = parseInt(setupTime) || 0;
+      const cleanupMinutes = parseInt(cleanupTime) || 0;
+      const totalDuration = serviceDuration + setupMinutes + cleanupMinutes;
+      
       const appointmentData = {
         patientId: parseInt(patientId),
         serviceId: parseInt(serviceId),
         roomId: roomId ? parseInt(roomId) : null,
-        duration: selectedService?.duration || 30,
-        ...rest,
+        duration: totalDuration,
+        setupTime: setupMinutes, 
+        cleanupTime: cleanupMinutes,
+        ...otherRest,
       };
       
       const response = await apiRequest("PATCH", `/api/appointments/${appointmentId}`, appointmentData);
@@ -227,6 +255,23 @@ export function AppointmentForm({
   const timeSlots = [
     "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
     "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"
+  ];
+  
+  // Setup and cleanup time options
+  const setupTimes = [
+    { value: "0", label: "No setup time" },
+    { value: "15", label: "15 minutes" },
+    { value: "30", label: "30 minutes" },
+    { value: "45", label: "45 minutes" },
+    { value: "60", label: "1 hour" }
+  ];
+  
+  const cleanupTimes = [
+    { value: "0", label: "No cleanup time" },
+    { value: "15", label: "15 minutes" },
+    { value: "30", label: "30 minutes" },
+    { value: "45", label: "45 minutes" },
+    { value: "60", label: "1 hour" }
   ];
   
   const isSubmitting = createAppointment.isPending || updateAppointment.isPending;
@@ -388,6 +433,59 @@ export function AppointmentForm({
                           {timeSlots.map((time) => (
                             <SelectItem key={time} value={time}>
                               {format(new Date(`2000-01-01T${time}`), 'h:mm a')}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              {/* Setup and Cleanup Times */}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="setupTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Setup Time</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || "0"}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select setup time" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {setupTimes.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="cleanupTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cleanup Time</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || "0"}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select cleanup time" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {cleanupTimes.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
                             </SelectItem>
                           ))}
                         </SelectContent>

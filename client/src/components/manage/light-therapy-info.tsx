@@ -19,7 +19,7 @@ export function LightTherapyInfo() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="group">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="group">
               <Users className="mr-2 h-4 w-4" />
               Group Session
@@ -31,6 +31,10 @@ export function LightTherapyInfo() {
             <TabsTrigger value="pet">
               <PawPrint className="mr-2 h-4 w-4" />
               With Pet
+            </TabsTrigger>
+            <TabsTrigger value="reiki">
+              <Sun className="mr-2 h-4 w-4" />
+              Reiki
             </TabsTrigger>
           </TabsList>
           
@@ -98,6 +102,29 @@ export function LightTherapyInfo() {
                 <p className="text-sm">
                   <strong>Note:</strong> Pet option available only in private rooms. All pets must be well-behaved and 
                   accompanied by their owner at all times. Please inform staff of any special requirements.
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="reiki" className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <h3 className="font-medium">Reiki Session (30min)</h3>
+                <span className="font-bold">$100</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Experience the healing energy of Reiki in a private session. Our certified Reiki 
+                practitioners will help restore balance and harmony to your energy centers.
+              </p>
+              <div className="flex items-center text-sm text-muted-foreground mt-2">
+                <Clock className="mr-2 h-4 w-4" />
+                <span>Duration: 30 minutes</span>
+              </div>
+              <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-950/30 rounded-md border border-amber-200 dark:border-amber-900">
+                <p className="text-sm">
+                  <strong>Note:</strong> You can add setup and cleanup time when booking to ensure your 
+                  practitioner has adequate time to prepare the room before your session and reset afterward.
                 </p>
               </div>
             </div>
