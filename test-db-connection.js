@@ -104,14 +104,14 @@ if (process.env.DB_TYPE === 'memory') {
   });
   
   // Try to resolve the hostname first to check DNS
-import { promises as dns } from 'dns';
+import dns from 'dns';
 import { exec } from 'child_process';
 import net from 'net';
 
 console.log(`Running network diagnostics to ${dbConfig.host}:${dbConfig.port}...`);
 
 // First resolve DNS to verify hostname resolution
-dns.lookup(dbConfig.host)
+dns.promises.lookup(dbConfig.host)
   .then(({ address, family }) => {
     console.log(`DNS resolved ${dbConfig.host} to ${address} (IPv${family})`);
     
