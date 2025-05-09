@@ -94,10 +94,10 @@ export const PosTile = () => {
 
   const validateGiftCard = () => {
     if (!giftCardCode) return;
-    
+
     setIsValidatingGiftCard(true);
     setGiftCardError("");
-    
+
     fetch(`/api/gift-cards/validate/${giftCardCode}`)
       .then(response => {
         const contentType = response.headers.get("content-type");
@@ -122,18 +122,18 @@ export const PosTile = () => {
         setIsValidatingGiftCard(false);
       });
   };
-  
+
   const applyGiftCard = () => {
     if (!giftCardInfo || !giftCardAmount) return;
-    
+
     const amount = parseFloat(giftCardAmount);
-    
+
     // Apply gift card amount to total
     if (amount > parseFloat(giftCardInfo.remainingBalance)) {
       setGiftCardError("Amount exceeds available balance");
       return;
     }
-    
+
     // Update the total and add to cart
     setCart([
       ...cart,
@@ -145,24 +145,17 @@ export const PosTile = () => {
         category: "payment"
       }
     ]);
-    
+
     // Reset gift card fields
     setGiftCardCode("");
     setGiftCardAmount("");
     setGiftCardInfo(null);
-    
+
     toast({
       title: "Gift card applied",
       description: `$${amount.toFixed(2)} applied from gift card`
     });
   };
-
-    queryFn: async () => {
-      const res = await fetch('/api/pos/customers');
-      if (!res.ok) throw new Error('Failed to load customers');
-      return res.json();
-    }
-  });
 
   // Create payment intent mutation
   const createPaymentIntentMutation = useMutation({
@@ -294,60 +287,65 @@ export const PosTile = () => {
 
   const calculateTax = () => {
     return (getCartTotal() - getDiscountAmount()) * 0.08; // Assuming 8% tax
+  };
 
-{/* Gift Card Redemption */}
-            <div className="mt-4 border-t pt-4">
-              <h3 className="font-medium mb-2">Apply Gift Card</h3>
-              <div className="flex space-x-2">
-                <Input
-                  placeholder="Enter gift card code"
-                  value={giftCardCode}
-                  onChange={(e) => setGiftCardCode(e.target.value)}
-                />
-                <Button 
-                  variant="outline" 
-                  disabled={!giftCardCode || isValidatingGiftCard}
-                  onClick={validateGiftCard}
-                >
-                  {isValidatingGiftCard ? "Checking..." : "Apply"}
-                </Button>
+  const renderGiftCardSection = () => {
+    return (
+      <>
+        {/* Gift Card Redemption */}
+        <div className="mt-4 border-t pt-4">
+          <h3 className="font-medium mb-2">Apply Gift Card</h3>
+          <div className="flex space-x-2">
+            <Input
+              placeholder="Enter gift card code"
+              value={giftCardCode}
+              onChange={(e) => setGiftCardCode(e.target.value)}
+            />
+            <Button
+              variant="outline"
+              disabled={!giftCardCode || isValidatingGiftCard}
+              onClick={validateGiftCard}
+            >
+              {isValidatingGiftCard ? "Checking..." : "Apply"}
+            </Button>
+          </div>
+
+          {giftCardError && (
+            <p className="text-sm text-red-500 mt-1">{giftCardError}</p>
+          )}
+
+          {giftCardInfo && (
+            <div className="mt-2 p-2 border rounded bg-muted/30">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Gift Card Balance:</span>
+                <span className="text-sm">${parseFloat(giftCardInfo.remainingBalance).toFixed(2)}</span>
               </div>
-              
-              {giftCardError && (
-                <p className="text-sm text-red-500 mt-1">{giftCardError}</p>
-              )}
-              
-              {giftCardInfo && (
-                <div className="mt-2 p-2 border rounded bg-muted/30">
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium">Gift Card Balance:</span>
-                    <span className="text-sm">${parseFloat(giftCardInfo.remainingBalance).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-sm">Amount to apply:</span>
-                    <Input
-                      type="number"
-                      className="w-24 h-8 text-sm"
-                      min="0.01"
-                      max={giftCardInfo.remainingBalance ? parseFloat(giftCardInfo.remainingBalance) : 0}
-                      step="0.01"
-                      value={giftCardAmount}
-                      onChange={(e) => setGiftCardAmount(e.target.value)}
-                    />
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full mt-2"
-                    disabled={!giftCardAmount || parseFloat(giftCardAmount) <= 0}
-                    onClick={applyGiftCard}
-                  >
-                    Apply to Order
-                  </Button>
-                </div>
-              )}
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-sm">Amount to apply:</span>
+                <Input
+                  type="number"
+                  className="w-24 h-8 text-sm"
+                  min="0.01"
+                  max={giftCardInfo.remainingBalance ? parseFloat(giftCardInfo.remainingBalance) : 0}
+                  step="0.01"
+                  value={giftCardAmount}
+                  onChange={(e) => setGiftCardAmount(e.target.value)}
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-2"
+                disabled={!giftCardAmount || parseFloat(giftCardAmount) <= 0}
+                onClick={applyGiftCard}
+              >
+                Apply to Order
+              </Button>
             </div>
-
+          )}
+        </div>
+      </>
+    );
   };
 
   const getFinalTotal = () => {
@@ -872,7 +870,7 @@ export const PosTile = () => {
   const findProductByName = (name: string) => {
     return products.find((product) => product.name === name);
   };
-    
+
   const handleProductSelect = (product: Product | undefined) => {
     if (product) {
         addToCart(product);
