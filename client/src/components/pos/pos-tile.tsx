@@ -390,7 +390,13 @@ export const PosTile = () => {
                   <TabsTrigger value="product">Products</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="all" className="mt-0">
+                <Tabs defaultValue="all" className="w-full">
+  <TabsList className="w-full justify-start mb-4">
+    <TabsTrigger value="all">All Items</TabsTrigger>
+    <TabsTrigger value="service">Services</TabsTrigger>
+    <TabsTrigger value="product">Products</TabsTrigger>
+  </TabsList>
+  <TabsContent value="all" className="mt-0">
                   <ScrollArea className="h-[430px]">
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {filteredProducts.map((product) => (

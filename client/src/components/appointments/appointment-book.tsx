@@ -39,7 +39,7 @@ interface TimeSlotProps {
 function TimeSlot({ hour, staffId, date, appointments, staffMember, onAddAppointment }: TimeSlotProps) {
   const time = `${hour}:00`;
   const formattedTime = format(new Date().setHours(hour, 0, 0, 0), 'h:mm a');
-  
+
   // Filter appointments for this time slot
   const slotAppointments = appointments.filter(
     (apt) => apt.time.startsWith(`${hour}:`) && new Date(apt.date).toDateString() === date.toDateString()
@@ -61,11 +61,11 @@ function TimeSlot({ hour, staffId, date, appointments, staffMember, onAddAppoint
               </div>
             </div>
           )}
-          
+
           <div className="absolute -left-14 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
             {formattedTime}
           </div>
-          
+
           {slotAppointments.map((appointment, index) => (
             <Draggable 
               key={appointment.id.toString()} 
@@ -131,11 +131,13 @@ function getAppointmentColorByStaff(staffId: number): string {
   return staff?.color || "bg-gray-500";
 }
 
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+
 export function AppointmentBook() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [visibleDays, setVisibleDays] = useState(5);
   const [dates, setDates] = useState<Date[]>([]);
-  
+
   // Fetch appointments
   const { data: appointments = [] } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments"],
@@ -145,7 +147,7 @@ export function AppointmentBook() {
   const { data: patients = [] } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],
   });
-  
+
   // Generate array of dates to display
   useEffect(() => {
     const newDates = Array.from({ length: visibleDays }, (_, i) => 
@@ -153,111 +155,120 @@ export function AppointmentBook() {
     );
     setDates(newDates);
   }, [selectedDate, visibleDays]);
-  
+
   // Handle navigation
   const handlePreviousDay = () => {
     setSelectedDate(prev => addDays(prev, -1));
   };
-  
+
   const handleNextDay = () => {
     setSelectedDate(prev => addDays(prev, 1));
   };
-  
+
   // Handle appointment addition
   const handleAddAppointment = (time: string, staffId: number, date: Date) => {
     console.log(`Add appointment at ${time} for staff ${staffId} on ${date.toDateString()}`);
     // Open appointment form dialog with this data pre-filled
   };
-  
+
   // Handle drag end
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
-    
+
     const { draggableId, destination } = result;
     const [staffId, hour, dateString] = destination.droppableId.split('-');
-    
+
     console.log(`Moved appointment ${draggableId} to staff ${staffId} at hour ${hour} on ${dateString}`);
     // Make API call to update appointment time/staff
   };
-  
+
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
       <div className="bg-sidebar-background text-white py-2 px-4 flex items-center space-x-4">
         <div className="text-lg font-medium">Appointment Book</div>
-        
+
         <div className="flex items-center space-x-1 ml-auto">
           <Button size="sm" variant="outline" className="bg-transparent text-white border-white/20 hover:bg-white/10">
             <Calendar size={16} className="mr-1" />
             Today
           </Button>
-          
+
           <Button size="sm" variant="outline" className="bg-transparent text-white border-white/20 hover:bg-white/10" onClick={handlePreviousDay}>
             <ArrowLeft size={16} />
           </Button>
-          
+
           <Button size="sm" variant="outline" className="bg-transparent text-white border-white/20 hover:bg-white/10" onClick={handleNextDay}>
             <ArrowRight size={16} />
           </Button>
-          
+
           <div className="text-sm font-medium px-2">
             {format(selectedDate, 'MMMM d, yyyy')}
           </div>
-          
+
           <Button size="sm" variant="outline" className="bg-transparent text-white border-white/20 hover:bg-white/10">
             <Clock size={16} className="mr-1" />
             Day View
             <ChevronDown size={14} className="ml-1" />
           </Button>
-          
+
           <Button size="sm" variant="outline" className="bg-transparent text-white border-white/20 hover:bg-white/10">
             <UserPlus size={16} className="mr-1" />
             Walk-In
           </Button>
         </div>
       </div>
-      
+
       {/* Calendar Grid */}
-      <div className="flex-1 overflow-auto p-4">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="relative pl-14"> {/* Add space for time labels */}
-            <div className="flex">
-              {/* Date Headers */}
-              {dates.map((date) => (
-                <div key={date.toISOString()} className="flex-1 text-center">
-                  <div className="py-2 font-medium">
-                    {format(date, 'E, MMM d')}
-                  </div>
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="w-full justify-start mb-4">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+          <TabsTrigger value="past">Past</TabsTrigger>
+        </TabsList>
+        <TabsContent value="all" className="mt-0">
+          <div className="flex-1 overflow-auto p-4">
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <div className="relative pl-14"> {/* Add space for time labels */}
+                <div className="flex">
+                  {/* Date Headers */}
+                  {dates.map((date) => (
+                    <div key={date.toISOString()} className="flex-1 text-center">
+                      <div className="py-2 font-medium">
+                        {format(date, 'E, MMM d')}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            
-            <div className="flex flex-col">
-              {MOCK_STAFF.map((staff) => (
-                <div key={staff.id} className="mb-6">
-                  <div className="flex">
-                    {dates.map((date) => (
-                      <div key={`${staff.id}-${date.toISOString()}`} className="flex-1">
-                        {MOCK_HOURS.map((hour) => (
-                          <TimeSlot
-                            key={`${staff.id}-${hour}-${date.toISOString()}`}
-                            hour={hour}
-                            staffId={staff.id}
-                            date={date}
-                            appointments={appointments.filter(apt => apt.serviceId === staff.id)}
-                            staffMember={staff}
-                            onAddAppointment={handleAddAppointment}
-                          />
+
+                <div className="flex flex-col">
+                  {MOCK_STAFF.map((staff) => (
+                    <div key={staff.id} className="mb-6">
+                      <div className="flex">
+                        {dates.map((date) => (
+                          <div key={`${staff.id}-${date.toISOString()}`} className="flex-1">
+                            {MOCK_HOURS.map((hour) => (
+                              <TimeSlot
+                                key={`${staff.id}-${hour}-${date.toISOString()}`}
+                                hour={hour}
+                                staffId={staff.id}
+                                date={date}
+                                appointments={appointments.filter(apt => apt.serviceId === staff.id)}
+                                staffMember={staff}
+                                onAddAppointment={handleAddAppointment}
+                              />
+                            ))}
+                          </div>
                         ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            </DragDropContext>
           </div>
-        </DragDropContext>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
