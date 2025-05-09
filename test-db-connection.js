@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import dns from 'dns';
 import { exec } from 'child_process';
 import net from 'net';
+import https from 'https';
 
 // Load environment variables
 dotenv.config();
@@ -25,6 +26,24 @@ const dbConfig = {
 // Retry configuration
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 3000; // 3 seconds
+
+// Get public IP address
+async function getPublicIp() {
+  return new Promise((resolve, reject) => {
+    https.get('https://api.ipify.org', (res) => {
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        resolve(data.trim());
+      });
+    }).on('error', (err) => {
+      console.error('Error getting public IP:', err.message);
+      resolve('Unable to determine');
+    });
+  });
+}
 
 async function testConnection(retryCount = 0) {
   const pool = new Pool(dbConfig);
@@ -82,6 +101,10 @@ async function runNetworkDiagnostics() {
   console.log('Testing database connection...');
   console.log('DB_TYPE:', process.env.DB_TYPE);
   console.log('NODE_ENV:', process.env.NODE_ENV);
+
+  // Get Replit's public IP
+  const publicIp = await getPublicIp();
+  console.log('Current public IP address (for AWS security group):', publicIp);
 
   // Run database-specific tests
   if (process.env.DB_TYPE === 'memory') {
@@ -159,9 +182,9 @@ async function runNetworkDiagnostics() {
         console.log('2. AWS RDS security group not allowing traffic from Replit IP');
         console.log('3. Database instance is down or not accepting connections');
         console.log('\nSolution steps:');
-        console.log('1. Make sure your RDS security group allows inbound on port 5432 from Replit IPs');
+        console.log(`1. Make sure your RDS security group allows inbound on port 5432 from IP ${publicIp}`);
         console.log('2. Check if the database is running and accessible');
-        console.log('3. Consider using a Replit managed PostgreSQL database');
+        console.log('3. Consider using a Replit managed PostgreSQL database instead');
       }
       
       console.log('\nAttempting PostgreSQL connection...');
