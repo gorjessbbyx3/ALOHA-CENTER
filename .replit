@@ -12,7 +12,7 @@ build = ["sh", "-c", "npm run build"]
 run = ["sh", "-c", "NODE_ENV=production DB_TYPE=aws-rds node dist/index.js"]
 
 [workflows]
-runButton = "Run ESM Fixed App"
+runButton = "Run Fixed ESM App"
 
 [[workflows.workflow]]
 name = "Run Development (Free)"
@@ -187,6 +187,15 @@ args = "NODE_ENV=development DB_TYPE=memory STORAGE_TYPE=local npm run dev"
 
 [[workflows.workflow]]
 name = "Run ESM Fixed App"
+author = 42094346
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development DB_TYPE=memory STORAGE_TYPE=local npm run dev"
+
+[[workflows.workflow]]
+name = "Run Fixed ESM App"
 author = 42094346
 mode = "sequential"
 

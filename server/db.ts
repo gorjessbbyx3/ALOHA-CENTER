@@ -1,6 +1,10 @@
 
 import * as schema from "@shared/schema";
 import { DatabaseType } from './config';
+import Database from 'better-sqlite3';
+import { drizzle as drizzleSqlite } from 'drizzle-orm/better-sqlite3';
+import { Pool } from 'pg';
+import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 
 // Get database type from environment variables
 const dbType = process.env.DB_TYPE || 'memory';
@@ -14,19 +18,11 @@ let db;
 if (dbType === 'memory' || dbType === DatabaseType.MEMORY) {
   console.log('Using in-memory database');
   
-  // Import SQLite driver for in-memory database
-  import Database from 'better-sqlite3';
-  import { drizzle as drizzleSqlite } from 'drizzle-orm/better-sqlite3';
-  
   // Create in-memory SQLite database
   const sqlite = new Database(':memory:');
   db = drizzleSqlite(sqlite, { schema });
   
 } else {
-  // PostgreSQL connection for production
-  import { Pool } from 'pg';
-  import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
-  
   // Get database credentials from environment variables
   const dbHost = process.env.DB_ENDPOINT || 'database-alohacenter.cshguag6ii9q.us-east-1.rds.amazonaws.com';
   const dbPort = Number(process.env.DB_PORT || '5432');
