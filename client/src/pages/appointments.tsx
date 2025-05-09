@@ -46,29 +46,29 @@ export default function Appointments() {
           <TabsTrigger value="calendar">Calendar View</TabsTrigger>
           <TabsTrigger value="rooms">Room View</TabsTrigger>
         </TabsList>
-      </Tabs>
-      
-      <TabsContent value="calendar" className="mt-0">
-        {/* Full-size Appointment Book with Meevo UI */}
-        <div className="h-[calc(100vh-16rem)] bg-white rounded-md shadow overflow-hidden">
-          <AppointmentBook />
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="rooms" className="mt-0">
-        <RoomSelector 
-          onRoomSelected={setSelectedRoomId}
-          selectedRoomId={selectedRoomId}
-        />
+
+        <TabsContent value="calendar" className="mt-0">
+          {/* Full-size Appointment Book with Meevo UI */}
+          <div className="h-[calc(100vh-16rem)] bg-white rounded-md shadow overflow-hidden">
+            <AppointmentBook />
+          </div>
+        </TabsContent>
         
-        {selectedRoomId && (
-          <RoomAppointments
-            roomId={selectedRoomId}
-            onNewAppointment={() => setIsAppointmentFormOpen(true)}
-            onEditAppointment={handleEditAppointment}
+        <TabsContent value="rooms" className="mt-0">
+          <RoomSelector 
+            onRoomSelected={setSelectedRoomId}
+            selectedRoomId={selectedRoomId}
           />
-        )}
-      </TabsContent>
+          
+          {selectedRoomId && (
+            <RoomAppointments
+              roomId={selectedRoomId}
+              onNewAppointment={() => setIsAppointmentFormOpen(true)}
+              onEditAppointment={handleEditAppointment}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
       
       {/* Appointment Form */}
       <AppointmentForm 

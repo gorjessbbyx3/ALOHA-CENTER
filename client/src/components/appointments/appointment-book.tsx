@@ -137,9 +137,17 @@ export function AppointmentBook() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [visibleDays, setVisibleDays] = useState(5);
   const [dates, setDates] = useState<Date[]>([]);
+  const [isAppointmentFormOpen, setIsAppointmentFormOpen] = useState(false);
+  const [newAppointmentData, setNewAppointmentData] = useState<{
+    time: string;
+    staffId: number;
+    date: Date;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [viewType, setViewType] = useState<"day" | "week" | "month">("day");
 
   // Fetch appointments
-  const { data: appointments = [] } = useQuery<Appointment[]>({
+  const { data: appointments = [], isLoading: loadingAppointments } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments"],
   });
 
@@ -147,6 +155,14 @@ export function AppointmentBook() {
   const { data: patients = [] } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],
   });
+
+  // Calculate visible days based on view type
+  useEffect(() => {
+    let days = 1;
+    if (viewType === "week") days = 7;
+    if (viewType === "month") days = 30;
+    setVisibleDays(days);
+  }, [viewType]);
 
   // Generate array of dates to display
   useEffect(() => {
@@ -158,17 +174,45 @@ export function AppointmentBook() {
 
   // Handle navigation
   const handlePreviousDay = () => {
-    setSelectedDate(prev => addDays(prev, -1));
+    setIsLoading(true);
+    setTimeout(() => {
+      if (viewType === "day") {
+        setSelectedDate(prev => addDays(prev, -1));
+      } else if (viewType === "week") {
+        setSelectedDate(prev => addDays(prev, -7));
+      } else {
+        setSelectedDate(prev => addDays(prev, -30));
+      }
+      setIsLoading(false);
+    }, 300);
   };
 
   const handleNextDay = () => {
-    setSelectedDate(prev => addDays(prev, 1));
+    setIsLoading(true);
+    setTimeout(() => {
+      if (viewType === "day") {
+        setSelectedDate(prev => addDays(prev, 1));
+      } else if (viewType === "week") {
+        setSelectedDate(prev => addDays(prev, 7));
+      } else {
+        setSelectedDate(prev => addDays(prev, 30));
+      }
+      setIsLoading(false);
+    }, 300);
+  };
+
+  const handleViewTypeChange = (type: "day" | "week" | "month") => {
+    setViewType(type);
+  };
+
+  const handleToday = () => {
+    setSelectedDate(new Date());
   };
 
   // Handle appointment addition
   const handleAddAppointment = (time: string, staffId: number, date: Date) => {
-    console.log(`Add appointment at ${time} for staff ${staffId} on ${date.toDateString()}`);
-    // Open appointment form dialog with this data pre-filled
+    setNewAppointmentData({ time, staffId, date });
+    setIsAppointmentFormOpen(true);
   };
 
   // Handle drag end
@@ -189,32 +233,62 @@ export function AppointmentBook() {
         <div className="text-lg font-medium">Appointment Book</div>
 
         <div className="flex items-center space-x-1 ml-auto">
-          <Button size="sm" variant="outline" className="bg-transparent text-white border-white/20 hover:bg-white/10">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="bg-transparent text-white border-white/20 hover:bg-white/10"
+            onClick={handleToday}
+          >
             <Calendar size={16} className="mr-1" />
             Today
           </Button>
 
-          <Button size="sm" variant="outline" className="bg-transparent text-white border-white/20 hover:bg-white/10" onClick={handlePreviousDay}>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="bg-transparent text-white border-white/20 hover:bg-white/10" 
+            onClick={handlePreviousDay}
+            disabled={isLoading}
+          >
             <ArrowLeft size={16} />
           </Button>
 
-          <Button size="sm" variant="outline" className="bg-transparent text-white border-white/20 hover:bg-white/10" onClick={handleNextDay}>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="bg-transparent text-white border-white/20 hover:bg-white/10" 
+            onClick={handleNextDay}
+            disabled={isLoading}
+          >
             <ArrowRight size={16} />
           </Button>
 
           <div className="text-sm font-medium px-2">
             {format(selectedDate, 'MMMM d, yyyy')}
+            {isLoading && <span className="ml-2 animate-pulse">...</span>}
           </div>
 
-          <Button size="sm" variant="outline" className="bg-transparent text-white border-white/20 hover:bg-white/10">
-            <Clock size={16} className="mr-1" />
-            Day View
-            <ChevronDown size={14} className="ml-1" />
-          </Button>
+          <Tabs value={viewType} className="inline-flex" onValueChange={(value) => handleViewTypeChange(value as "day" | "week" | "month")}>
+            <TabsList className="bg-transparent border border-white/20">
+              <TabsTrigger value="day" className="text-white data-[state=active]:bg-white/20">Day</TabsTrigger>
+              <TabsTrigger value="week" className="text-white data-[state=active]:bg-white/20">Week</TabsTrigger>
+              <TabsTrigger value="month" className="text-white data-[state=active]:bg-white/20">Month</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
           <Button size="sm" variant="outline" className="bg-transparent text-white border-white/20 hover:bg-white/10">
             <UserPlus size={16} className="mr-1" />
             Walk-In
+          </Button>
+
+          <Button 
+            size="sm" 
+            variant="default" 
+            className="bg-primary hover:bg-primary/90"
+            onClick={() => handleAddAppointment(`${new Date().getHours()}:00`, 1, new Date())}
+          >
+            <Plus size={16} className="mr-1" />
+            New Appointment
           </Button>
         </div>
       </div>
@@ -227,48 +301,66 @@ export function AppointmentBook() {
           <TabsTrigger value="past">Past</TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-0">
-          <div className="flex-1 overflow-auto p-4">
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <div className="relative pl-14"> {/* Add space for time labels */}
-                <div className="flex">
-                  {/* Date Headers */}
-                  {dates.map((date) => (
-                    <div key={date.toISOString()} className="flex-1 text-center">
-                      <div className="py-2 font-medium">
-                        {format(date, 'E, MMM d')}
+          {loadingAppointments ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-auto p-4">
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <div className="relative pl-14"> {/* Add space for time labels */}
+                  <div className="flex">
+                    {/* Date Headers */}
+                    {dates.map((date) => (
+                      <div key={date.toISOString()} className="flex-1 text-center">
+                        <div className="py-2 font-medium">
+                          {format(date, 'E, MMM d')}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-                <div className="flex flex-col">
-                  {MOCK_STAFF.map((staff) => (
-                    <div key={staff.id} className="mb-6">
-                      <div className="flex">
-                        {dates.map((date) => (
-                          <div key={`${staff.id}-${date.toISOString()}`} className="flex-1">
-                            {MOCK_HOURS.map((hour) => (
-                              <TimeSlot
-                                key={`${staff.id}-${hour}-${date.toISOString()}`}
-                                hour={hour}
-                                staffId={staff.id}
-                                date={date}
-                                appointments={appointments.filter(apt => apt.serviceId === staff.id)}
-                                staffMember={staff}
-                                onAddAppointment={handleAddAppointment}
-                              />
-                            ))}
-                          </div>
-                        ))}
+                  <div className="flex flex-col">
+                    {MOCK_STAFF.map((staff) => (
+                      <div key={staff.id} className="mb-6">
+                        <div className="flex">
+                          {dates.map((date) => (
+                            <div key={`${staff.id}-${date.toISOString()}`} className="flex-1">
+                              {MOCK_HOURS.map((hour) => (
+                                <TimeSlot
+                                  key={`${staff.id}-${hour}-${date.toISOString()}`}
+                                  hour={hour}
+                                  staffId={staff.id}
+                                  date={date}
+                                  appointments={appointments.filter(apt => apt.serviceId === staff.id)}
+                                  staffMember={staff}
+                                  onAddAppointment={handleAddAppointment}
+                                />
+                              ))}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </DragDropContext>
-          </div>
+              </DragDropContext>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
+      
+      {/* Appointment Form */}
+      {isAppointmentFormOpen && (
+        <AppointmentForm 
+          open={isAppointmentFormOpen} 
+          onOpenChange={setIsAppointmentFormOpen}
+          appointmentId={null}
+          onSuccess={() => {
+            setNewAppointmentData(null);
+          }}
+        />
+      )}
     </div>
   );
 }
