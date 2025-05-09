@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import nodemailer from "nodemailer";
-import { appointments, insertAppointmentSchema, insertPatientSchema, insertPaymentSchema, services, users, rooms, schema } from "@shared/schema";
+import { appointments, insertAppointmentSchema, insertPatientSchema, insertPaymentSchema, services, users, rooms } from "@shared/schema";
 import { z } from "zod";
 import { sendAppointmentConfirmation, sendPaymentReceipt } from "./email";
 import { db } from "./db";
@@ -65,13 +65,34 @@ async function seedInitialData() {
   
   // Check if we have treatment packages
   try {
-    const existingPackages = await db.select().from(schema.treatmentPackages);
+    const treatmentPackages = pgTable("treatment_packages", {
+      id: serial("id").primaryKey(),
+      name: text("name").notNull(),
+      displayName: text("display_name").notNull(),
+      description: text("description"),
+      focus: text("focus"),
+      idealFor: text("ideal_for"),
+      duration: text("duration"),
+      sessionType: text("session_type"),
+      sessionCount: integer("session_count"),
+      sessionCost: numeric("session_cost"),
+      totalCost: numeric("total_cost"),
+      addOns: text("add_ons"),
+      bonuses: text("bonuses"),
+      active: boolean("active").default(true),
+      category: text("category").default("standard"),
+      packageType: text("package_type"),
+      createdAt: timestamp("created_at").defaultNow(),
+      updatedAt: timestamp("updated_at").defaultNow(),
+    });
+    
+    const existingPackages = await db.select().from(treatmentPackages);
     
     if (existingPackages.length === 0) {
       console.log("Seeding treatment packages...");
       
       // Seed treatment packages
-      await db.insert(schema.treatmentPackages).values([
+      await db.insert(treatmentPackages).values([
         {
           name: "senior_wellness",
           displayName: "Kupuna Light Vitality",
