@@ -283,7 +283,14 @@ export function AppointmentForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Service Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={(value) => {
+                      field.onChange(value);
+                      // If changing from Private with Pet to another service, update the form
+                      const selectedService = services.find(s => s.id.toString() === value);
+                      if (selectedService && !selectedService.name.includes("with Pet")) {
+                        // Switch to regular service without pet option
+                      }
+                    }} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a service" />
@@ -292,7 +299,7 @@ export function AppointmentForm({
                       <SelectContent>
                         {services.map((service) => (
                           <SelectItem key={service.id} value={service.id.toString()}>
-                            {service.name} ({service.duration} min)
+                            {service.name} ({service.duration} min) - ${service.price}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -301,6 +308,26 @@ export function AppointmentForm({
                   </FormItem>
                 )}
               />
+              
+              {/* Show pet checkbox only for private light therapy */}
+              {selectedServiceId && 
+                services.find(s => s.id.toString() === selectedServiceId)?.name.includes("Private Light Therapy") &&
+                !services.find(s => s.id.toString() === selectedServiceId)?.name.includes("with Pet") && (
+                <div className="flex items-center space-x-2 mt-2 p-2 border rounded bg-muted/20">
+                  <Checkbox id="petOption" onCheckedChange={(checked) => {
+                    if (checked) {
+                      // Find the "with pet" service option and select it
+                      const petService = services.find(s => s.name.includes("with Pet"));
+                      if (petService) {
+                        form.setValue("serviceId", petService.id.toString());
+                      }
+                    }
+                  }} />
+                  <Label htmlFor="petOption" className="text-sm font-medium">
+                    Add pet option (+$20)
+                  </Label>
+                </div>
+              )}
               
               {/* Room */}
               <FormField

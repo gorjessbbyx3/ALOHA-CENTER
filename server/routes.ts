@@ -38,9 +38,13 @@ async function seedInitialData() {
       { name: "Follow-up Visit", description: "Follow-up appointment", duration: 15, price: "30" },
       { name: "Physical Examination", description: "Complete physical", duration: 60, price: "120" },
       { name: "Vaccination", description: "Various vaccines", duration: 15, price: "40" },
-      { name: "Lab Work", description: "Blood work and tests", duration: 30, price: "80" }
+      { name: "Lab Work", description: "Blood work and tests", duration: 30, price: "80" },
+      { name: "Group Light Therapy (2hr)", description: "2-hour light therapy session in our group room", duration: 120, price: "60" },
+      { name: "Private Light Therapy (2hr)", description: "2-hour light therapy session in a private room", duration: 120, price: "100" },
+      { name: "Private Light Therapy with Pet (2hr)", description: "2-hour light therapy session in a private room with your pet", duration: 120, price: "120" }
     ]);
   }
+</old_str>
   
   // Check if we have admin user
   const existingUsers = await db.select().from(users);

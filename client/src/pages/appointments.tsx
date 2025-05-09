@@ -8,6 +8,11 @@ import { AppointmentBook } from "@/components/appointments/appointment-book";
 import { RoomSelector } from "@/components/appointments/room-selector";
 import { RoomAppointments } from "@/components/appointments/room-appointments";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { LightTherapyInfo } from "@/components/manage/light-therapy-info";
+import { Service } from "@shared/schema";
 
 export default function Appointments() {
   const [isAppointmentFormOpen, setIsAppointmentFormOpen] = useState(false);
@@ -15,25 +20,25 @@ export default function Appointments() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<number | undefined>();
   const [viewMode, setViewMode] = useState<"calendar" | "rooms">("calendar");
-  
+
   // Fetch appointments
   const { data: appointments = [] } = useQuery({
     queryKey: ["/api/appointments"],
     select: (data: Appointment[]) => data,
   });
-  
+
   // Handle view appointment details
   const handleViewAppointment = (id: number) => {
     setSelectedAppointmentId(id);
     setIsDetailsOpen(true);
   };
-  
+
   // Handle edit appointment
   const handleEditAppointment = (appointment: Appointment) => {
     setSelectedAppointmentId(appointment.id);
     setIsAppointmentFormOpen(true);
   };
-  
+
   return (
     <AdminLayout 
       title="Appointment Book" 
@@ -63,13 +68,13 @@ export default function Appointments() {
             <AppointmentBook />
           </div>
         </TabsContent>
-        
+
         <TabsContent value="rooms" className="mt-0">
           <RoomSelector 
             onRoomSelected={setSelectedRoomId}
             selectedRoomId={selectedRoomId}
           />
-          
+
           {selectedRoomId && (
             <RoomAppointments
               roomId={selectedRoomId}
@@ -79,7 +84,7 @@ export default function Appointments() {
           )}
         </TabsContent>
       </Tabs>
-      
+
       {/* Appointment Form */}
       <AppointmentForm 
         open={isAppointmentFormOpen} 
@@ -89,7 +94,7 @@ export default function Appointments() {
           setSelectedAppointmentId(null);
         }}
       />
-      
+
       {/* Appointment Details */}
       {selectedAppointmentId && (
         <AppointmentDetails
