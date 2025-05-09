@@ -117,8 +117,8 @@ async function createSchemaIfNeeded() {
           email TEXT NOT NULL,
           name TEXT NOT NULL,
           role TEXT NOT NULL DEFAULT 'patient',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          created_at TIMESTAMP DEFAULT (datetime('now')),
+          updated_at TIMESTAMP DEFAULT (datetime('now'))
         )
       `);
       
