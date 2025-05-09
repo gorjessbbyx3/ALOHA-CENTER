@@ -11,6 +11,7 @@ const dbType = process.env.DB_TYPE || 'memory';
 
 console.log(`Using database type: ${dbType}`);
 
+// Define variables outside conditional blocks
 let pool;
 let db;
 
