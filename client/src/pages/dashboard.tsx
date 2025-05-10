@@ -159,15 +159,21 @@ export default function Dashboard() {
 
       {/* Hidden trigger elements for the dialogs */}
       <div className="hidden">
-        <DialogTrigger asChild>
-          <Button id="manage-dialog-trigger">Open Management</Button>
-        </DialogTrigger>
-        <DialogTrigger asChild>
-          <Button id="pos-dialog-trigger">Open POS</Button>
-        </DialogTrigger>
-        <DialogTrigger asChild>
-          <Button id="menu-dialog-trigger">Open Menu</Button>
-        </DialogTrigger>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button id="manage-dialog-trigger">Open Management</Button>
+          </DialogTrigger>
+        </Dialog>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button id="pos-dialog-trigger">Open POS</Button>
+          </DialogTrigger>
+        </Dialog>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button id="menu-dialog-trigger">Open Menu</Button>
+          </DialogTrigger>
+        </Dialog>
       </div>
     </AdminLayout>
   );
