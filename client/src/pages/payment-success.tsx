@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
@@ -73,11 +74,7 @@ export default function PaymentSuccess() {
     );
   }
 
-  import { Button } from "../components/ui/button";
-import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "../components/ui/card";
-import { AlertCircle } from "lucide-react";
-
-if (error) {
+  if (error) {
     return (
       <div className="max-w-md mx-auto mt-10">
         <Card className="border-red-200">
