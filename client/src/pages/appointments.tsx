@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Appointment } from "@shared/schema";
 import { AdminLayout } from "@/components/layout/admin-layout";
+import { AppointmentBook } from "@/components/appointments/appointment-book";
+import { HomeButton } from "@/components/ui/home-button";
+import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
 import { AppointmentForm } from "@/components/appointments/appointment-form";
 import { AppointmentDetails } from "@/components/appointments/appointment-details";
 import { AppointmentBook } from "@/components/appointments/appointment-book";
@@ -104,7 +108,7 @@ export default function Appointments() {
           onOpenChange={setIsDetailsOpen}
         />
       )}
-      
+
       {/* Home Button */}
       <HomeButton />
     </AdminLayout>
