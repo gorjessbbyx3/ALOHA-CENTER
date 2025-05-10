@@ -389,7 +389,7 @@ export function AppointmentForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No specific room</SelectItem>
+                        <SelectItem value="none">No specific room</SelectItem>
                         {rooms.map((room: any) => (
                           <SelectItem key={room.id} value={room.id ? room.id.toString() : `room-${room.name}`}>
                             {room.name}
