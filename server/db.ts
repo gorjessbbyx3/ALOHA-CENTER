@@ -108,6 +108,8 @@ async function createSchemaIfNeeded() {
         return;
       }
       
+      console.log("SQLite does not support the 'now()' function. Using CURRENT_TIMESTAMP instead.");
+      
       // Create users table
       await db.run(`
         CREATE TABLE IF NOT EXISTS users (

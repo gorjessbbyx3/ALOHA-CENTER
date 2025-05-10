@@ -73,7 +73,11 @@ export default function PaymentSuccess() {
     );
   }
 
-  if (error) {
+  import { Button } from "../components/ui/button";
+import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "../components/ui/card";
+import { AlertCircle } from "lucide-react";
+
+if (error) {
     return (
       <div className="max-w-md mx-auto mt-10">
         <Card className="border-red-200">

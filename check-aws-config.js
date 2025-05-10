@@ -86,3 +86,30 @@ async function main() {
 main().catch(error => {
   console.error('Error running configuration check:', error);
 });
+// Simple AWS configuration checker
+console.log("Checking AWS configuration...");
+
+// Check for AWS environment variables
+const awsVars = {
+  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || "",
+  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || "",
+  AWS_REGION: process.env.AWS_REGION || "",
+  S3_BUCKET: process.env.AWS_S3_BUCKET || ""
+};
+
+// Log configuration status
+console.log("AWS Configuration Status:");
+Object.entries(awsVars).forEach(([key, value]) => {
+  console.log(`- ${key}: ${value ? "✓ Set" : "✗ Missing"}`);
+});
+
+// Provide guidance
+if (!awsVars.AWS_ACCESS_KEY_ID || !awsVars.AWS_SECRET_ACCESS_KEY) {
+  console.log("\nRecommendation: Set AWS credentials using environment variables.");
+  console.log("Use the Secrets tool in Replit to securely set your AWS credentials.");
+} else {
+  console.log("\nAWS credentials appear to be configured.");
+}
+
+console.log("\nNote: For local development with memory storage, AWS credentials are optional.");
+console.log("S3 functionality will be disabled when using memory storage mode (DB_TYPE=memory).");
