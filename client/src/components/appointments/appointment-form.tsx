@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const appointmentFormSchema = z.object({
   patientId: z.string().min(1, { message: "Please select a patient" }),
@@ -67,32 +68,32 @@ export function AppointmentForm({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditMode, setIsEditMode] = useState(false);
-  
+
   // Get services
   const { data: services = [] } = useQuery({
     queryKey: ["/api/services"],
     select: (data: Service[]) => data,
   });
-  
+
   // Get patients
   const { data: patients = [] } = useQuery({
     queryKey: ["/api/patients"],
     select: (data: Patient[]) => data,
   });
-  
+
   // Get rooms
   const { data: rooms = [] } = useQuery({
     queryKey: ["/api/rooms"],
     select: (data: any[]) => data,
   });
-  
+
   // Get appointment data if in edit mode
   const { data: appointmentData, isLoading: isLoadingAppointment } = useQuery({
     queryKey: ["/api/appointments", appointmentId],
     enabled: !!appointmentId,
     throwOnError: false,
   });
-  
+
   // Form definition
   const form = useForm<AppointmentFormValues>({
     resolver: zodResolver(appointmentFormSchema),
@@ -108,14 +109,14 @@ export function AppointmentForm({
       cleanupTime: "0",
     },
   });
-  
+
   // Update form with appointment data when in edit mode
   useEffect(() => {
     if (appointmentId && appointmentData) {
       setIsEditMode(true);
-      
+
       const dateStr = format(new Date(appointmentData.date), "yyyy-MM-dd");
-      
+
       form.reset({
         patientId: appointmentData.patientId ? appointmentData.patientId.toString() : "",
         serviceId: appointmentData.serviceId ? appointmentData.serviceId.toString() : "",
@@ -142,24 +143,24 @@ export function AppointmentForm({
       });
     }
   }, [appointmentId, appointmentData, form]);
-  
+
   // Selected service for duration determination
   const selectedServiceId = form.watch("serviceId");
   const selectedService = services.find(service => service.id.toString() === selectedServiceId);
-  
+
   // Create appointment mutation
   const createAppointment = useMutation({
     mutationFn: async (data: AppointmentFormValues) => {
       const { patientId, serviceId, roomId, ...rest } = data;
-      
+
       const { setupTime, cleanupTime, ...otherRest } = rest;
-      
+
       // Calculate total duration including setup and cleanup
       const serviceDuration = selectedService?.duration || 30;
       const setupMinutes = parseInt(setupTime) || 0;
       const cleanupMinutes = parseInt(cleanupTime) || 0;
       const totalDuration = serviceDuration + setupMinutes + cleanupMinutes;
-      
+
       const appointmentData = {
         patientId: parseInt(patientId),
         serviceId: parseInt(serviceId),
@@ -170,7 +171,7 @@ export function AppointmentForm({
         status: "scheduled",
         ...otherRest,
       };
-      
+
       const response = await apiRequest("POST", "/api/appointments", appointmentData);
       return response.json();
     },
@@ -194,22 +195,22 @@ export function AppointmentForm({
       console.error("Appointment creation error:", error);
     },
   });
-  
+
   // Update appointment mutation
   const updateAppointment = useMutation({
     mutationFn: async (data: AppointmentFormValues) => {
       if (!appointmentId) throw new Error("No appointment ID provided for update");
-      
+
       const { patientId, serviceId, roomId, ...rest } = data;
-      
+
       const { setupTime, cleanupTime, ...otherRest } = rest;
-      
+
       // Calculate total duration including setup and cleanup
       const serviceDuration = selectedService?.duration || 30;
       const setupMinutes = parseInt(setupTime) || 0;
       const cleanupMinutes = parseInt(cleanupTime) || 0;
       const totalDuration = serviceDuration + setupMinutes + cleanupMinutes;
-      
+
       const appointmentData = {
         patientId: parseInt(patientId),
         serviceId: parseInt(serviceId),
@@ -219,7 +220,7 @@ export function AppointmentForm({
         cleanupTime: cleanupMinutes,
         ...otherRest,
       };
-      
+
       const response = await apiRequest("PATCH", `/api/appointments/${appointmentId}`, appointmentData);
       return response.json();
     },
@@ -242,7 +243,7 @@ export function AppointmentForm({
       console.error("Appointment update error:", error);
     },
   });
-  
+
   const onSubmit = (values: AppointmentFormValues) => {
     if (isEditMode) {
       updateAppointment.mutate(values);
@@ -250,13 +251,13 @@ export function AppointmentForm({
       createAppointment.mutate(values);
     }
   };
-  
+
   // Available time slots (would be dynamic in a real app)
   const timeSlots = [
     "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
     "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"
   ];
-  
+
   // Setup and cleanup time options
   const setupTimes = [
     { value: "0", label: "No setup time" },
@@ -265,7 +266,7 @@ export function AppointmentForm({
     { value: "45", label: "45 minutes" },
     { value: "60", label: "1 hour" }
   ];
-  
+
   const cleanupTimes = [
     { value: "0", label: "No cleanup time" },
     { value: "15", label: "15 minutes" },
@@ -273,9 +274,9 @@ export function AppointmentForm({
     { value: "45", label: "45 minutes" },
     { value: "60", label: "1 hour" }
   ];
-  
+
   const isSubmitting = createAppointment.isPending || updateAppointment.isPending;
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -287,7 +288,7 @@ export function AppointmentForm({
               : "Fill in the details below to schedule a new appointment."}
           </DialogDescription>
         </DialogHeader>
-        
+
         {isLoadingAppointment && isEditMode ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -310,7 +311,7 @@ export function AppointmentForm({
                       </FormControl>
                       <SelectContent>
                         {patients.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id.toString()}>
+                          <SelectItem key={patient.id} value={patient.id ? patient.id.toString() : `patient-${patient.name}`}>
                             {patient.name}
                           </SelectItem>
                         ))}
@@ -320,7 +321,7 @@ export function AppointmentForm({
                   </FormItem>
                 )}
               />
-              
+
               {/* Service Type */}
               <FormField
                 control={form.control}
@@ -343,7 +344,7 @@ export function AppointmentForm({
                       </FormControl>
                       <SelectContent>
                         {services.map((service) => (
-                          <SelectItem key={service.id} value={service.id.toString()}>
+                          <SelectItem key={service.id} value={service.id ? service.id.toString() : `service-${service.name}`}>
                             {service.name} ({service.duration} min) - ${service.price}
                           </SelectItem>
                         ))}
@@ -353,7 +354,7 @@ export function AppointmentForm({
                   </FormItem>
                 )}
               />
-              
+
               {/* Show pet checkbox only for private light therapy */}
               {selectedServiceId && 
                 services.find(s => s.id.toString() === selectedServiceId)?.name.includes("Private Light Therapy") &&
@@ -373,7 +374,7 @@ export function AppointmentForm({
                   </Label>
                 </div>
               )}
-              
+
               {/* Room */}
               <FormField
                 control={form.control}
@@ -390,7 +391,7 @@ export function AppointmentForm({
                       <SelectContent>
                         <SelectItem value="">No specific room</SelectItem>
                         {rooms.map((room: any) => (
-                          <SelectItem key={room.id} value={room.id.toString()}>
+                          <SelectItem key={room.id} value={room.id ? room.id.toString() : `room-${room.name}`}>
                             {room.name}
                           </SelectItem>
                         ))}
@@ -400,7 +401,7 @@ export function AppointmentForm({
                   </FormItem>
                 )}
               />
-              
+
               {/* Date and Time */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -416,7 +417,7 @@ export function AppointmentForm({
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="time"
@@ -442,7 +443,7 @@ export function AppointmentForm({
                   )}
                 />
               </div>
-              
+
               {/* Setup and Cleanup Times */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -469,7 +470,7 @@ export function AppointmentForm({
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="cleanupTime"
@@ -495,7 +496,7 @@ export function AppointmentForm({
                   )}
                 />
               </div>
-              
+
               {/* Notes */}
               <FormField
                 control={form.control}
@@ -515,7 +516,7 @@ export function AppointmentForm({
                   </FormItem>
                 )}
               />
-              
+
               {/* Payment Method */}
               <FormField
                 control={form.control}
@@ -547,7 +548,7 @@ export function AppointmentForm({
                   </FormItem>
                 )}
               />
-              
+
               <DialogFooter>
                 <Button 
                   type="button" 
