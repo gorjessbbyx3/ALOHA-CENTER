@@ -183,6 +183,26 @@ async function seedInitialData() {
     // Check if it's a SQLite 'now()' function error and provide more specific information
     if (error.message && error.message.includes("no such function: now")) {
       console.log("SQLite does not support the 'now()' function. Using CURRENT_TIMESTAMP instead.");
+      
+      // Try again with CURRENT_TIMESTAMP
+      try {
+        // Replace instances of now() with CURRENT_TIMESTAMP for SQLite
+        const timestamp = new Date().toISOString();
+        await db.insert(users).values([
+          {
+            id: 1,
+            name: 'Admin User',
+            email: 'admin@example.com',
+            passwordHash: await argon2.hash('admin123'),
+            role: 'ADMIN',
+            createdAt: timestamp,
+            updatedAt: timestamp
+          },
+          // Add other users with explicit timestamps
+        ]);
+      } catch (retryError) {
+        console.error("Error retrying with explicit timestamp:", retryError);
+      }
     }
   }
 }
