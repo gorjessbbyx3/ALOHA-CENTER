@@ -545,6 +545,8 @@ export default function Settings() {
         </div>
       </div>
     )}
-  </AdminLayout>
+  {/* Home Button */}
+      <HomeButton />
+    </AdminLayout>
   );
 }

@@ -104,6 +104,9 @@ export default function Appointments() {
           onOpenChange={setIsDetailsOpen}
         />
       )}
+      
+      {/* Home Button */}
+      <HomeButton />
     </AdminLayout>
   );
 }

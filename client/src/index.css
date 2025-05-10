@@ -7,6 +7,36 @@
 --foreground: 205 30% 15%;
 --muted: 210 40% 93%;
 --muted-foreground: 205 25% 40%;
+
+/* Improved background and text contrast */
+body {
+  background-color: #f0f4f8;
+  color: #1a202c;
+}
+
+.text-gray-900 {
+  color: #1a202c;
+}
+
+.text-gray-600, .text-gray-500 {
+  color: #4a5568;
+}
+
+/* Ensure content pages have proper backgrounds */
+.bg-white {
+  background-color: #ffffff;
+}
+
+/* Add box shadow to cards for better visibility */
+.card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Improve contrasts for buttons and interactive elements */
+button.bg-primary, .bg-primary {
+  color: white;
+}
+
 --popover: 210 50% 98%;
 --popover-foreground: 205 30% 15%;
 --card: 0 0% 100%;

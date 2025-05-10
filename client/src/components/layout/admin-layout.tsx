@@ -21,33 +21,24 @@ export function AdminLayout({
   onExport
 }: AdminLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar Navigation */}
-      <Sidebar className={mobileMenuOpen ? "block" : ""} />
-      
-      {/* Main Content Area */}
-      <div className="flex flex-col flex-1 w-0 overflow-hidden">
+    <div className="min-h-screen bg-gray-50">
+      <Sidebar />
+
+      <div className="flex flex-col md:pl-72">
         <Header 
-          title={title}
+          title={title} 
           subtitle={subtitle}
           onNewAppointment={onNewAppointment}
           showExportBtn={showExportBtn}
           onExport={onExport}
-          className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-6"
+          className={headerClassName}
         />
-        
-        <main className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-50">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              {children}
-            </div>
-          </div>
+
+        <main className="flex-1 p-4 md:p-6 bg-gray-50">
+          {children}
         </main>
-        
-        {/* Help Button */}
-        <HelpButton />
       </div>
     </div>
   );

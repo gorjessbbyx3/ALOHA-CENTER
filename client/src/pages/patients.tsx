@@ -523,6 +523,8 @@ export default function Patients() {
           </Form>
         </DialogContent>
       </Dialog>
+    {/* Home Button */}
+      <HomeButton />
     </AdminLayout>
   );
 }
