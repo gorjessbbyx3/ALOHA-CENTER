@@ -492,8 +492,8 @@ export const PosTile = () => {
               </div>
 
               <Select 
-                value={selectedCustomer?.toString() || ""} 
-                onValueChange={(value) => setSelectedCustomer(value ? parseInt(value) : null)}
+                value={selectedCustomer?.toString() || "none"} 
+                onValueChange={(value) => setSelectedCustomer(value && value !== "none" ? parseInt(value) : null)}
               >
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Select customer" />
