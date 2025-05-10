@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LightTherapyInfo } from "@/components/manage/light-therapy-info";
 import { Service } from "@shared/schema";
+import { Clock, Settings, ShoppingCart, FileText, ExternalLink } from "lucide-react";
 
 export default function Appointments() {
   const [isAppointmentFormOpen, setIsAppointmentFormOpen] = useState(false);
