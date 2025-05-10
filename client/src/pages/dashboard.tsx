@@ -45,7 +45,7 @@ export default function Dashboard() {
   
   return (
     <AdminLayout 
-      title="Aloha Healing Center" 
+      title="Aloha Light Center" 
       subtitle="Welcome to your Admin dashboard"
       onNewAppointment={() => setIsAppointmentFormOpen(true)}
       onExport={handleExport}
@@ -159,9 +159,15 @@ export default function Dashboard() {
 
       {/* Hidden trigger elements for the dialogs */}
       <div className="hidden">
-        <Button id="manage-dialog-trigger">Open Management</Button>
-        <Button id="pos-dialog-trigger">Open POS</Button>
-        <Button id="menu-dialog-trigger">Open Menu</Button>
+        <DialogTrigger asChild>
+          <Button id="manage-dialog-trigger">Open Management</Button>
+        </DialogTrigger>
+        <DialogTrigger asChild>
+          <Button id="pos-dialog-trigger">Open POS</Button>
+        </DialogTrigger>
+        <DialogTrigger asChild>
+          <Button id="menu-dialog-trigger">Open Menu</Button>
+        </DialogTrigger>
       </div>
     </AdminLayout>
   );
