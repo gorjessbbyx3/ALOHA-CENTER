@@ -1,9 +1,22 @@
 
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
+import { execSync } from 'child_process';
+import fs from 'fs';
 
 // Load environment variables
 dotenv.config();
+
+// Quick disk cleanup before connecting
+try {
+  console.log('🧹 Running quick disk cleanup before connecting...');
+  if (fs.existsSync('./node_modules/.vite')) {
+    execSync('rm -rf ./node_modules/.vite');
+    console.log('Cleared Vite cache');
+  }
+} catch (error) {
+  console.warn('Warning: Cleanup failed:', error.message);
+}
 
 async function testReplitDbConnection() {
   // Get database connection string from Replit environment

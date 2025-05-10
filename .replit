@@ -12,7 +12,7 @@ build = ["sh", "-c", "npm run build"]
 run = ["sh", "-c", "NODE_ENV=production DB_TYPE=aws-rds node dist/index.js"]
 
 [workflows]
-runButton = "Run Fixed Application"
+runButton = "Run App with Reduced Disk Usage"
 
 [[workflows.workflow]]
 name = "Run Development (Free)"
@@ -337,6 +337,19 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node --import tsx test-rds-proxy.js"
+
+[[workflows.workflow]]
+name = "Run App with Reduced Disk Usage"
+author = 42094346
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node cleanup-disk-space.js"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "VITE_DEPS_WARMUP=false VITE_DEPS_OPTIMIZE=false NODE_ENV=development DB_TYPE=memory STORAGE_TYPE=local npm run dev"
 
 [[ports]]
 localPort = 5000
