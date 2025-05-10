@@ -246,7 +246,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node --import tsx test-db-connection.js"
+args = "node --import tsx test-replit-db.js"
 
 [[workflows.workflow]]
 name = "Test RDS Proxy Connection"
@@ -328,6 +328,15 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "NODE_ENV=development DB_TYPE=memory STORAGE_TYPE=local npm run dev"
+
+[[workflows.workflow]]
+name = "Test RDS Proxy with Updated Config"
+author = 42094346
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node --import tsx test-rds-proxy.js"
 
 [[ports]]
 localPort = 5000
