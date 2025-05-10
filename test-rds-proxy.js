@@ -15,12 +15,16 @@ const proxyConfig = {
   database: process.env.DB_NAME || 'clinic_management',
   user: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || '',
-  ssl: true,
-  connectionTimeoutMillis: 15000,
-  query_timeout: 10000,
+  ssl: {
+    rejectUnauthorized: false // This allows connections to self-signed or invalid SSL certs
+  },
+  connectionTimeoutMillis: 30000, // Increased timeout to 30 seconds
+  query_timeout: 20000, // Increased query timeout
   max: 2,
-  idleTimeoutMillis: 10000
+  idleTimeoutMillis: 10000,
+  keepAlive: true // Enable TCP keepalive
 };
+</old_str>
 
 // Retry configuration
 const MAX_RETRIES = 3;
